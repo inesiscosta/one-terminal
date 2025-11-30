@@ -4,7 +4,7 @@ import React, {
   useRef,
   useState,
 } from "react";
-import type { FSNode, DirectoryNode, FileNode, CompletionState, HistoryEntry } from "./types";
+import type { FSNode, DirectoryNode, FileNode, CompletionState, HistoryEntry, ExtraCommands } from "./types";
 
 const COMMANDS = ["help", "ls", "cd", "cat", "echo", "pwd", "clear"];
 
@@ -61,65 +61,78 @@ function longestCommonPrefix(strings: string[]): string {
 
 /* ---------- Hook ---------- */
 
-export function useTerminalEngine(fs: DirectoryNode, startPath = "/") {
-  const [path, setPath] = useState<string>(normalizePath(startPath));
-  const [history, setHistory] = useState<HistoryEntry[]>([]);
-  const [input, setInput] = useState("");
-  const [completion, setCompletion] = useState<CompletionState | null>(null);
-  const previousCommandsRef = useRef<string[]>([]);
-  const [historyIndex, setHistoryIndex] = useState<number | null>(null);
-  const previousDirRef = useRef<string | null>(null);
-  const cwdNode = useMemo<DirectoryNode | null>(() => {
-    const segments = normalizePath(path).split("/").filter(Boolean);
-    let current: FSNode = fs;
-    for (const segment of segments) {
-      if (!isDirectory(current) || !(segment in current.entries)) return null;
-      current = current.entries[segment];
-    }
-    return isDirectory(current) ? current : null;
-  }, [fs, path]);
+export function useTerminalEngine(
+  fs: DirectoryNode,
+  startPath = "/",
+  extraCommands?: ExtraCommands
+) {
+   const [path, setPath] = useState<string>(normalizePath(startPath));
+   const [history, setHistory] = useState<HistoryEntry[]>([]);
+   const [input, setInput] = useState("");
+   const [completion, setCompletion] = useState<CompletionState | null>(null);
+   const previousCommandsRef = useRef<string[]>([]);
+   const [historyIndex, setHistoryIndex] = useState<number | null>(null);
+   const previousDirRef = useRef<string | null>(null);
+   const cwdNode = useMemo<DirectoryNode | null>(() => {
+     const segments = normalizePath(path).split("/").filter(Boolean);
+     let current: FSNode = fs;
+     for (const segment of segments) {
+       if (!isDirectory(current) || !(segment in current.entries)) return null;
+       current = current.entries[segment];
+     }
+     return isDirectory(current) ? current : null;
+   }, [fs, path]);
 
-  const resolvePath = useCallback(
-    (p: string): string => {
-      if (!p || p === ".") return path;
-      if (p.startsWith("/")) return normalizePath(p);
-      return normalizePath(`${path}/${p}`);
-    },
-    [path]
-  );
+   const resolvePath = useCallback(
+     (p: string): string => {
+       if (!p || p === ".") return path;
+       if (p.startsWith("/")) return normalizePath(p);
+       return normalizePath(`${path}/${p}`);
+     },
+     [path]
+   );
 
-  const getNodeAt = useCallback(
-    (p: string): FSNode | undefined => {
-      const segments = normalizePath(p).split("/").filter(Boolean);
-      let current: FSNode = fs;
+   const getNodeAt = useCallback(
+     (p: string): FSNode | undefined => {
+       const segments = normalizePath(p).split("/").filter(Boolean);
+       let current: FSNode = fs;
 
-      for (const segment of segments) {
-        if (!isDirectory(current) || !(segment in current.entries)) return undefined;
-        current = current.entries[segment];
+       for (const segment of segments) {
+         if (!isDirectory(current) || !(segment in current.entries)) return undefined;
+         current = current.entries[segment];
+       }
+
+       return current;
+     },
+     [fs]
+   );
+
+   const run = useCallback(
+     (line: string): HistoryEntry => {
+       const trimmed = line.trim();
+       const makeEntry = (out?: React.ReactNode): HistoryEntry => ({
+         in: trimmed,
+         out,
+       });
+
+       if (!trimmed) return makeEntry();
+
+       const [cmd, ...args] = trimmed.split(/\s+/);
+
+      if (extraCommands && typeof extraCommands[cmd] === "function") {
+        try {
+          const out = extraCommands[cmd](args, (p: string) => getNodeAt(resolvePath(p)) ?? null);
+          return makeEntry(out);
+        } catch (err) {
+          return makeEntry(`error: executing ${cmd}`);
+        }
       }
 
-      return current;
-    },
-    [fs]
-  );
+       /* ---- Built-in commands ---- */
 
-  const run = useCallback(
-    (line: string): HistoryEntry => {
-      const trimmed = line.trim();
-      const makeEntry = (out?: React.ReactNode): HistoryEntry => ({
-        in: trimmed,
-        out,
-      });
-
-      if (!trimmed) return makeEntry();
-
-      const [cmd, ...args] = trimmed.split(/\s+/);
-
-      /* ---- Built-in commands ---- */
-
-      if (cmd === "pwd") {
-        return makeEntry(path);
-      }
+       if (cmd === "pwd") {
+         return makeEntry(path);
+       }
 
       if (cmd === "clear") {
         setHistory([]);

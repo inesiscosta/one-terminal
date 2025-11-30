@@ -2,7 +2,7 @@ import { PRESET_THEMES } from "./themes";
 
 export type WindowChromeStyle = "mac" | "windows" | "linux" | "none";
 
-export type CursorShape = "block" | "line" | "underscore";
+export type CursorShape = "block" | "line" | "underline";
 
 export type TextFileNode = {
   kind: "file";
@@ -29,6 +29,7 @@ export type FSNode = FileNode | DirectoryNode;
 
 export type TerminalCursorOptions = {
   shape?: CursorShape;
+  solidBlock?: boolean;
   color?: string;
   blink?: boolean;
   blinkRate?: number;
@@ -53,8 +54,14 @@ export type TerminalWindowChrome = {
     min?: string;
     max?: string;
   };
+  macButtonsInnerColor?: string;
   cornerRadius?: number;
 };
+
+export type ExtraCommands = Record<
+  string,
+  (args: string[], getNodeAt: (path: string) => FSNode | null) => React.ReactNode
+>;
 
 export type TerminalProps = {
   fileStructure: DirectoryNode;
@@ -62,8 +69,8 @@ export type TerminalProps = {
   welcomeMessage?: string;
   prompt?: string;
   windowChrome?: WindowChromeStyle | TerminalWindowChrome;
-  theme?: TerminalTheme | keyof typeof PRESET_THEMES;
-  extraCommands?: Record<string, (args: string[], getNodeAt: (path: string) => FSNode | null) => React.ReactNode>;
+  theme?: TerminalTheme | keyof typeof PRESET_THEMES | [keyof typeof PRESET_THEMES, TerminalTheme];
+  extraCommands?: ExtraCommands;
   className?: string;
 };
 
