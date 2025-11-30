@@ -1,0 +1,285 @@
+.rt-wrap {
+  font-family: var(--rt-font);
+  font-size: var(--rt-font-size, 14px);
+  line-height: var(--rt-line-height, 1.6);
+  color: var(--rt-textColor);
+}
+
+.rt-window {
+  background-color: var(--rt-bg);
+  color: var(--rt-textColor);
+  border-radius: var(--rt-radius);
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--rt-border-color);
+  max-height: 60vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.rt-window > * {
+  position: relative;
+  z-index: 1;
+}
+
+.rt-titlebar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  height: 32px;
+  padding: 0 10px;
+  background-color: var(--rt-titlebar-bg);
+  color: var(--rt-titlebar-textColor);
+  font-size: 11px;
+  user-select: none;
+}
+
+.rt-traffic {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.rt-traffic-dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 999px;
+  background-color: var(--rt-btn-close);
+}
+
+.rt-window.mac .rt-traffic-dot {
+  position: relative;
+  transition: transform 120ms ease;
+}
+.rt-window.mac .rt-traffic-dot::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  display: block;
+  pointer-events: none;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 10px 10px;
+  opacity: 0;
+  transition: opacity 120ms ease, transform 120ms ease;
+}
+.rt-window.mac .rt-traffic-dot:hover { transform: translateY(-1px); }
+.rt-window.mac .rt-traffic-dot.close:hover::after {
+  opacity: 1;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path stroke='%23000' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round' d='M6.5 6.5L17.5 17.5M17.5 6.5L6.5 17.5'/></svg>");
+}
+.rt-window.mac .rt-traffic-dot.min:hover::after {
+  opacity: 1;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><rect x='4' y='11' width='16' height='2' fill='%23000'/></svg>");
+}
+.rt-window.mac .rt-traffic-dot.max:hover::after {
+  opacity: 1;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><rect x='6' y='6' width='12' height='12' fill='none' stroke='%23000' stroke-width='1.6' rx='1'/></svg>");
+}
+
+.rt-traffic-dot.min {
+  background-color: var(--rt-btn-min);
+}
+
+.rt-traffic-dot.max {
+  background-color: var(--rt-btn-max);
+}
+
+.rt-title {
+  font-weight: 500;
+  opacity: 0.9;
+}
+
+.rt-window.mac .rt-titlebar {
+  justify-content: flex-start;
+}
+
+.rt-window.mac .rt-title {
+  margin-left: 4px;
+}
+
+.rt-window.linux .rt-titlebar {
+  justify-content: space-between;
+}
+.rt-window.linux .rt-traffic {
+  margin-left: auto;
+  gap: 0.5rem;
+}
+.rt-window.linux .rt-traffic-dot {
+  width: 13px;
+  height: 13px;
+  border-radius: 999px;
+  box-shadow: 0 1px 0 rgba(0,0,0,0.25) inset;
+}
+
+.rt-window.ubuntu .rt-traffic-dot:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(0,0,0,0.35), 0 1px 0 rgba(255,255,255,0.02) inset;
+}
+
+.rt-window.windows .rt-titlebar {
+  justify-content: space-between;
+}
+
+.rt-window.windows .rt-traffic {
+  margin-left: auto;
+}
+
+.rt-window.windows .rt-traffic-dot {
+  border-radius: 2px;
+  width: 12px;
+  height: 12px;
+}
+
+.rt-window.windows .rt-traffic-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  background-color: transparent;
+  position: relative;
+  transition: background-color 120ms ease, color 120ms ease;
+}
+
+.rt-window.windows .rt-traffic-dot::before {
+  content: "";
+  position: absolute;
+  inset: -6px -6px -6px -6px;
+  border-radius: 6px;
+  background-color: transparent;
+  transition: backgroundColor 120ms ease;
+}
+
+.rt-window.windows .rt-traffic-dot::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  display: block;
+  pointer-events: none;
+  background-size: 10px 10px;
+  background-repeat: no-repeat;
+  background-position: center;
+  opacity: 0;
+  transition: opacity 120ms ease, filter 120ms ease;
+}
+.rt-window.windows .rt-traffic-dot.close::after,
+.rt-window.windows .rt-traffic-dot.min::after,
+.rt-window.windows .rt-traffic-dot.max::after {
+  opacity: 0;
+}
+
+.rt-body {
+  padding: 10px;
+  overflow: auto;
+  flex: 1;
+}
+
+.rt-row {
+  margin: 4px 0;
+}
+
+.rt-prompt {
+  color: var(--rt-promptColor);
+  margin-right: 6px;
+}
+
+.rt-input-row {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+}
+
+.rt-input-shell {
+  position: relative;
+  flex: 1;
+  display: inline-flex;
+  align-items: baseline;
+  min-width: 0;
+}
+
+.rt-input-ghost {
+  white-space: pre;
+  font: inherit;
+  color: inherit;
+}
+
+.rt-input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  background-color: transparent;
+  border: none;
+  outline: none;
+  color: transparent;
+  caret-color: transparent;
+  font: inherit;
+}
+
+.rt-input::selection {
+  background-color: transparent;
+}
+
+
+.rt-banner {
+  opacity: 0.8;
+  margin-bottom: 8px;
+  font-size: 0.9em;
+}
+
+.rt-cursor {
+  display: inline-block;
+  background-color: var(--rt-cursor-color);
+  vertical-align: baseline;
+  margin-left: 0;
+  animation: rt-cursor-blink var(--rt-cursor-rate) steps(1) infinite;
+}
+
+.rt-cursor[data-shape="block"] {
+  width: 0.6ch;
+  height: 1em;
+}
+
+.rt-cursor[data-shape="line"] {
+  width: 2px;
+  height: 1em;
+}
+
+.rt-cursor[data-shape="underscore"] {
+  width: 0.6ch;
+  height: 2px;
+  transform: translateY(0.25em);
+}
+
+.rt-cursor[data-blink="0"] {
+  animation: none;
+}
+
+.rt-completions-row {
+  margin-top: 2px;
+}
+
+.rt-completions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5ch;
+}
+
+.rt-completion-option {
+  white-space: nowrap;
+}
+
+@keyframes rt-cursor-blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rt-cursor {
+    animation: none;
+  }
+}
