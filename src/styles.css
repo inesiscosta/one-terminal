@@ -8,7 +8,7 @@
 .rt-window {
   background-color: var(--rt-bg);
   color: var(--rt-textColor);
-  border-radius: var(--rt-radius);
+  border-radius: var(--rt-corner-radius);
   overflow: hidden;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
   border: 1px solid var(--rt-border-color);
@@ -43,51 +43,46 @@
 .rt-traffic-dot {
   width: 11px;
   height: 11px;
-  border-radius: 999px;
+  border-radius: 100%;
   background-color: var(--rt-btn-close);
+}
+
+.rt-traffic-dot.close { background: var(--rt-btn-close); }
+.rt-traffic-dot.min { background: var(--rt-btn-min); }
+.rt-traffic-dot.max { background: var(--rt-btn-max); }
+
+.rt-title {
+  font-weight: 500;
+  opacity: 0.9;
 }
 
 .rt-window.mac .rt-traffic-dot {
   position: relative;
   transition: transform 120ms ease;
 }
-.rt-window.mac .rt-traffic-dot::after {
-  content: "";
+
+.rt-window.mac .mac-icon {
   position: absolute;
-  inset: 0;
-  display: block;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%) scale(0.92);
+  width: 9px;
+  height: 9px;
   pointer-events: none;
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: 10px 10px;
   opacity: 0;
-  transition: opacity 120ms ease, transform 120ms ease;
-}
-.rt-window.mac .rt-traffic-dot:hover { transform: translateY(-1px); }
-.rt-window.mac .rt-traffic-dot.close:hover::after {
-  opacity: 1;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path stroke='%23000' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round' d='M6.5 6.5L17.5 17.5M17.5 6.5L6.5 17.5'/></svg>");
-}
-.rt-window.mac .rt-traffic-dot.min:hover::after {
-  opacity: 1;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><rect x='4' y='11' width='16' height='2' fill='%23000'/></svg>");
-}
-.rt-window.mac .rt-traffic-dot.max:hover::after {
-  opacity: 1;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><rect x='6' y='6' width='12' height='12' fill='none' stroke='%23000' stroke-width='1.6' rx='1'/></svg>");
+  transition: opacity 140ms ease, transform 140ms ease;
+  z-index: 3;
 }
 
-.rt-traffic-dot.min {
-  background-color: var(--rt-btn-min);
+.mac-icon svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  color: var(--rt-mac-buttons-inner-color, #333);
 }
 
-.rt-traffic-dot.max {
-  background-color: var(--rt-btn-max);
-}
-
-.rt-title {
-  font-weight: 500;
-  opacity: 0.9;
+.rt-window.mac .rt-traffic:hover .mac-icon {
+  opacity: 1;
 }
 
 .rt-window.mac .rt-titlebar {
@@ -101,70 +96,9 @@
 .rt-window.linux .rt-titlebar {
   justify-content: space-between;
 }
-.rt-window.linux .rt-traffic {
-  margin-left: auto;
-  gap: 0.5rem;
-}
-.rt-window.linux .rt-traffic-dot {
-  width: 13px;
-  height: 13px;
-  border-radius: 999px;
-  box-shadow: 0 1px 0 rgba(0,0,0,0.25) inset;
-}
-
-.rt-window.ubuntu .rt-traffic-dot:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 3px 8px rgba(0,0,0,0.35), 0 1px 0 rgba(255,255,255,0.02) inset;
-}
 
 .rt-window.windows .rt-titlebar {
   justify-content: space-between;
-}
-
-.rt-window.windows .rt-traffic {
-  margin-left: auto;
-}
-
-.rt-window.windows .rt-traffic-dot {
-  border-radius: 2px;
-  width: 12px;
-  height: 12px;
-}
-
-.rt-window.windows .rt-traffic-dot {
-  width: 14px;
-  height: 14px;
-  border-radius: 3px;
-  background-color: transparent;
-  position: relative;
-  transition: background-color 120ms ease, color 120ms ease;
-}
-
-.rt-window.windows .rt-traffic-dot::before {
-  content: "";
-  position: absolute;
-  inset: -6px -6px -6px -6px;
-  border-radius: 6px;
-  background-color: transparent;
-  transition: backgroundColor 120ms ease;
-}
-
-.rt-window.windows .rt-traffic-dot::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  display: block;
-  pointer-events: none;
-  background-size: 10px 10px;
-  background-repeat: no-repeat;
-  background-position: center;
-  opacity: 0;
-  transition: opacity 120ms ease, filter 120ms ease;
-}
-.rt-window.windows .rt-traffic-dot.close::after,
-.rt-window.windows .rt-traffic-dot.min::after,
-.rt-window.windows .rt-traffic-dot.max::after {
-  opacity: 0;
 }
 
 .rt-body {
@@ -200,6 +134,8 @@
   white-space: pre;
   font: inherit;
   color: inherit;
+  position: relative;
+  z-index: 4;
 }
 
 .rt-input {
@@ -218,8 +154,7 @@
   background-color: transparent;
 }
 
-
-.rt-banner {
+.rt-welcome-message {
   opacity: 0.8;
   margin-bottom: 8px;
   font-size: 0.9em;
@@ -230,7 +165,7 @@
   background-color: var(--rt-cursor-color);
   vertical-align: baseline;
   margin-left: 0;
-  animation: rt-cursor-blink var(--rt-cursor-rate) steps(1) infinite;
+  animation: rt-overlay-caret-blink var(--rt-cursor-rate) steps(1) infinite;
 }
 
 .rt-cursor[data-shape="block"] {
@@ -267,7 +202,35 @@
   white-space: nowrap;
 }
 
-@keyframes rt-cursor-blink {
+.rt-overlay-caret {
+  position: absolute;
+  pointer-events: none;
+  display: block;
+  box-sizing: border-box;
+  border-radius: 2px;
+  animation-timing-function: steps(1);
+  animation-iteration-count: infinite;
+  z-index: 2;
+  transform-origin: center;
+  transition: transform 160ms cubic-bezier(.2,.9,.2,1), opacity 160ms ease;
+}
+
+.rt-overlay-caret-line {
+  width: 2px;
+  background: var(--rt-cursor-color);
+}
+
+.rt-overlay-caret-block {
+  background: var(--rt-cursor-color);
+}
+
+.rt-overlay-caret-underline {
+  background: transparent;
+  height: 2px;
+  border-bottom: 2px solid var(--rt-cursor-color);
+}
+
+@keyframes rt-overlay-caret-blink {
   0%,
   49% {
     opacity: 1;
@@ -275,11 +238,5 @@
   50%,
   100% {
     opacity: 0;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .rt-cursor {
-    animation: none;
   }
 }

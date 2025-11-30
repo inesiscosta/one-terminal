@@ -14,6 +14,7 @@ export const CHROME_STYLES: Record<Exclude<WindowChromeStyle, "none">, TerminalW
     },
     titleBarTextColor: "rgba(212, 212, 212, 1)",
     cornerRadius: 10,
+    macButtonsInnerColor: "#333",
   },
   windows: {
     style: "windows",
@@ -47,7 +48,8 @@ export const PRESET_THEMES: Record<string, TerminalTheme> = {
     lineHeight: "1.6",
     cursor: {
       shape: "block",
-      color: "#f8f8f2",
+      solidBlock: true,
+      color: "#ffffff",
       blink: true,
       blinkRate: 600,
     },
@@ -61,6 +63,7 @@ export const PRESET_THEMES: Record<string, TerminalTheme> = {
     lineHeight: "1.6",
     cursor: {
       shape: "block",
+      solidBlock: true,
       color: "#93a1a1",
       blink: true,
       blinkRate: 600,
@@ -75,6 +78,7 @@ export const PRESET_THEMES: Record<string, TerminalTheme> = {
     lineHeight: "1.6",
     cursor: {
       shape: "block",
+      solidBlock: true,
       color: "#657b83",
       blink: true,
       blinkRate: 600,
@@ -88,7 +92,7 @@ export const PRESET_THEMES: Record<string, TerminalTheme> = {
     fontSize: "14px",
     lineHeight: "1.6",
     cursor: {
-      shape: "block",
+      shape: "line",
       color: "#f8f8f2",
       blink: true,
       blinkRate: 600,
@@ -102,7 +106,7 @@ export const PRESET_THEMES: Record<string, TerminalTheme> = {
     fontSize: "14px",
     lineHeight: "1.6",
     cursor: {
-      shape: "block",
+      shape: "line",
       color: "#24292e",
       blink: true,
       blinkRate: 600,
