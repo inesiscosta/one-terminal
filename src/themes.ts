@@ -1,49 +1,11 @@
-import type {
-  TerminalTheme,
-  WindowChromeStyle,
-  TerminalWindowChrome,
-} from "./types";
-
-export const CHROME_STYLES: Record<Exclude<WindowChromeStyle, "none">, TerminalWindowChrome> = {
-  mac: {
-    style: "mac",
-    buttonColors: {
-      close: "#ff5f56",
-      min: "#ffbd2e",
-      max: "#27c93f",
-    },
-    titleBarTextColor: "rgba(212, 212, 212, 1)",
-    cornerRadius: 10,
-    macButtonsInnerColor: "#333",
-  },
-  windows: {
-    style: "windows",
-    buttonColors: {
-      close: "#f2f2f2",
-      min: "#f2f2f2",
-      max: "#f2f2f2",
-    },
-    titleBarTextColor: "rgba(212, 212, 212, 1)",
-    cornerRadius: 0,
-  },
-  linux: {
-    style: "linux",
-    buttonColors: {
-      close: "#f2f2f2",
-      min: "#f2f2f2",
-      max: "#f2f2f2",
-    },
-    titleBarTextColor: "rgba(212, 212, 212, 1)",
-    cornerRadius: 8,
-  },
-};
+import type { TerminalTheme, WindowChromeStyle, TerminalWindowChrome } from "./types";
 
 export const PRESET_THEMES: Record<string, TerminalTheme> = {
   dracula: {
     backgroundColor: "#282a36",
     textColor: "#f8f8f2",
     promptColor: "#50fa7b",
-    fontFamily: '"JetBrainsMono Nerd Font", ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace',
+    fontFamily: '"JetBrainsMono Nerd Font", ui-monospace, monospace',
     fontSize: "14px",
     lineHeight: "1.6",
     cursor: {
@@ -51,14 +13,14 @@ export const PRESET_THEMES: Record<string, TerminalTheme> = {
       solidBlock: true,
       color: "#ffffff",
       blink: true,
-      blinkRate: 600,
+      blinkRate: 800,
     },
   },
   solarizedDark: {
     backgroundColor: "#002b36",
     textColor: "#93a1a1",
     promptColor: "#b58900",
-    fontFamily: '"JetBrainsMono Nerd Font", ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace',
+    fontFamily: '"JetBrainsMono Nerd Font", ui-monospace, monospace',
     fontSize: "14px",
     lineHeight: "1.6",
     cursor: {
@@ -73,7 +35,7 @@ export const PRESET_THEMES: Record<string, TerminalTheme> = {
     backgroundColor: "#fdf6e3",
     textColor: "#657b83",
     promptColor: "#b58900",
-    fontFamily: '"JetBrainsMono Nerd Font", ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace',
+    fontFamily: '"JetBrainsMono Nerd Font", ui-monospace, monospace',
     fontSize: "14px",
     lineHeight: "1.6",
     cursor: {
@@ -88,7 +50,7 @@ export const PRESET_THEMES: Record<string, TerminalTheme> = {
     backgroundColor: "#272822",
     textColor: "#f8f8f2",
     promptColor: "#a6e22e",
-    fontFamily: '"JetBrainsMono Nerd Font", ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace',
+    fontFamily: '"JetBrainsMono Nerd Font", ui-monospace, monospace',
     fontSize: "14px",
     lineHeight: "1.6",
     cursor: {
@@ -102,7 +64,7 @@ export const PRESET_THEMES: Record<string, TerminalTheme> = {
     backgroundColor: "#f6f8fa",
     textColor: "#24292e",
     promptColor: "#0366d6",
-    fontFamily: '"JetBrainsMono Nerd Font", ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace',
+    fontFamily: '"JetBrainsMono Nerd Font", ui-monospace, monospace',
     fontSize: "14px",
     lineHeight: "1.6",
     cursor: {
@@ -110,6 +72,45 @@ export const PRESET_THEMES: Record<string, TerminalTheme> = {
       color: "#24292e",
       blink: true,
       blinkRate: 600,
+    },
+  },
+};
+
+export const CHROME_STYLES: Record<Exclude<WindowChromeStyle, "none">, TerminalWindowChrome> = {
+  mac: {
+    style: "mac",
+    cornerRadius: 14,
+    titleBarText: "Terminal",
+    titleBarTextColor: "rgba(212, 212, 212, 1)",
+    buttonColors: {
+      close: "#ff5f56",
+      min: "#ffbd2e",
+      max: "#27c93f",
+      iconColor: "#333",
+    },
+  },
+  windows: {
+    style: "windows",
+    cornerRadius: 7,
+    titleBarText: "Terminal",
+    titleBarTextColor: "rgba(212, 212, 212, 1)",
+    buttonColors: {
+      close: "#ff0000ea",
+      min: "#d8d8d850",
+      max: "#d8d8d850",
+      iconColor: "#ffffff",
+    },
+  },
+  linux: {
+    style: "linux",
+    cornerRadius: 8,
+    titleBarText: "Terminal",
+    titleBarTextColor: "rgba(212, 212, 212, 1)",
+    buttonColors: {
+      close: "#ececec52",
+      min: "#ececec52",
+      max: "#ececec52",
+      iconColor: "#ffffff",
     },
   },
 };

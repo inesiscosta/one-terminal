@@ -3,199 +3,187 @@ import React, {
   useMemo,
   useRef,
   useState,
-  useCallback,
   useLayoutEffect,
+  useCallback,
 } from "react";
 import type {
   TerminalProps,
   TerminalTheme,
-  TerminalCursorOptions,
   WindowChromeStyle,
   TerminalWindowChrome,
+  CursorOptions,
 } from "./types";
 import { useTerminalEngine } from "./hooks";
-import { MacOsTrafficLight } from "./assets";
-import { PRESET_THEMES, CHROME_STYLES, } from "./themes";
+import {
+  MacCloseIcon,
+  MacMinIcon,
+  MacMaxIcon,
+  WinCloseIcon,
+  WinMinIcon,
+  WinMaxIcon,
+  LinuxCloseIcon,
+  LinuxMinIcon,
+  LinuxMaxIcon,
+} from "./assets";
+import { PRESET_THEMES, CHROME_STYLES } from "./themes";
 import "./styles.css";
 
 // Defaults
 const DEFAULT_PROMPT = "guest@website:$ ";
 const DEFAULT_WELCOME_MESSAGE = "";
 const DEFAULT_START_PATH = "/";
-const DEFAULT_THEME_NAME = "dracula";
-const DEFAULT_THEME: TerminalTheme = PRESET_THEMES[DEFAULT_THEME_NAME];
-const DEFAULT_CHROME_STYLE: WindowChromeStyle = "mac";
-const DEFAULT_TERMINAL_TITLE = "";
+const DEFAULT_THEME: TerminalTheme = PRESET_THEMES["dracula"];
+const DEFAULT_CHROME_STYLE: Exclude<WindowChromeStyle, "none"> = "mac";
+const DEFAULT_WINDOW_CHROME: TerminalWindowChrome = CHROME_STYLES[DEFAULT_CHROME_STYLE];
 
-// Internal Types
-type ResolvedTheme = {
-  backgroundColor: string;
-  textColor: string;
-  promptColor: string;
-  fontFamily: string;
-  fontSize: string;
-  lineHeight: string;
-  cursor: Required<TerminalCursorOptions>;
-};
+// TODO: Add more theme validation warnings
+function resolveTheme(themeProp: TerminalProps["theme"]): TerminalTheme {
+  let preset: TerminalTheme = DEFAULT_THEME;
+  let overrides: Partial<TerminalTheme> = {};
 
-type ResolvedChrome =
-  | (TerminalWindowChrome & {
-      style: Exclude<WindowChromeStyle, "none">;
-      buttonColors: NonNullable<TerminalWindowChrome["buttonColors"]>;
-      titleBarText: string;
-      titleBarTextColor: string;
-      macButtonsInnerColor?: string;
-    })
-  | null;
+  // Overrides on a preset theme
+  if (Array.isArray(themeProp)) {
+    const [presetName, themeOverrides] = themeProp;
 
+    if (typeof presetName === "string") {
+      if (presetName in PRESET_THEMES) {
+        preset = PRESET_THEMES[presetName];
+      } else {
+        console.warn(`Terminal: unrecognized theme preset name "${presetName}", falling back to default theme.`);
+      }
+    } else if (presetName != null) {
+      console.warn(`Terminal: invalid theme preset name in array, expected string but got ${typeof presetName}.`);
+    }
 
-function resolveTheme(themeProp: TerminalProps["theme"]): ResolvedTheme {
-	let preset: TerminalTheme = DEFAULT_THEME;
-	let overrides: TerminalTheme = {};
+    if (typeof themeOverrides === "object") {
+      overrides = themeOverrides as Partial<TerminalTheme>;
+    } else if (themeOverrides != null) {
+      console.warn(`Terminal: invalid theme overrides in array, expected object but got ${typeof themeOverrides}.`);
+    }
+  }
 
-	// Array shorthand: ["monokai", { promptColor: '...' }]
-	if (Array.isArray(themeProp)) {
-		const [presetName, maybeOverrides] = themeProp;
-		if (typeof presetName === "string") {
-			preset = PRESET_THEMES[presetName] ?? DEFAULT_THEME;
-		}
-		overrides = (maybeOverrides && typeof maybeOverrides === "object") ? (maybeOverrides as TerminalTheme) : {};
-	} else if (typeof themeProp === "string") {
-		// simple preset name
-		preset = PRESET_THEMES[themeProp] ?? DEFAULT_THEME;
-		overrides = {};
-	} else if (typeof themeProp === "object" && themeProp !== null) {
-		// Could be:
-		//  - a plain overrides object
-		//  - the result of spreading a string: {..."monokai", theme: { ... } }
-		const obj = themeProp as Record<string, any>;
+  // Preset theme
+  else if (typeof themeProp === "string") {
+    if (themeProp in PRESET_THEMES) {
+      preset = PRESET_THEMES[themeProp];
+    } else {
+      console.warn(`Terminal: unrecognized theme preset name "${themeProp}", falling back to default theme.`);
+    }
+  }
 
-		// detect numeric keys produced by spreading a string
-		const numericKeys = Object.keys(obj).filter((k) => /^\d+$/.test(k));
-		if (numericKeys.length) {
-			// reconstruct candidate preset name from ordered numeric keys
-			numericKeys.sort((a, b) => Number(a) - Number(b));
-			const candidate = numericKeys.map((k) => String(obj[k])).join("");
-			if (typeof candidate === "string" && PRESET_THEMES[candidate] && numericKeys.length === candidate.length) {
-				preset = PRESET_THEMES[candidate] ?? DEFAULT_THEME;
-				// prefer nested `theme` property as overrides if present
-				if (obj.theme && typeof obj.theme === "object") {
-					overrides = { ...(obj.theme as TerminalTheme) };
-				} else {
-					// otherwise copy non-numeric props (excluding any accidental sentinel keys)
-					overrides = { ...obj } as TerminalTheme;
-					for (const k of numericKeys) delete (overrides as any)[k];
-					delete (overrides as any).theme;
-					delete (overrides as any).preset;
-					delete (overrides as any).base;
-				}
-			} else {
-				// not a recognized spread-string; treat as normal overrides
-				overrides = { ...obj } as TerminalTheme;
-			}
-		} else {
-			// Normal overrides object; also accept optional 'preset'/'base' markers
-			overrides = { ...obj } as TerminalTheme;
-			const maybePreset = (overrides as any).preset ?? (overrides as any).base;
-			if (typeof maybePreset === "string") {
-				preset = PRESET_THEMES[maybePreset] ?? DEFAULT_THEME;
-				// remove marker so it doesn't become part of merged theme
-				delete (overrides as any).preset;
-				delete (overrides as any).base;
-			}
-		}
-	} else {
-		overrides = {};
-	}
+  // Full custom theme or default theme overrides
+  else if (typeof themeProp === "object" && themeProp !== null) {
+    overrides = { ...(themeProp as TerminalTheme) };
+  }
 
-	// Shallow merge: overrides win, preset provides defaults
-	const merged: TerminalTheme = { ...preset, ...overrides };
+  // Invalid theme prop
+  else if (themeProp != null) {
+    console.warn(`Terminal: invalid theme prop, expected string, object, or [string, object] but got ${typeof themeProp}.`);
+  }
 
-	// Cursor: deep-ish merge so user can override only part of it (e.g. color)
-	const baseCursorTheme: TerminalCursorOptions =
-		preset.cursor ?? DEFAULT_THEME.cursor!;
-	const overrideCursor = overrides.cursor ?? {};
+  const mergedCursor: CursorOptions = {
+    ...(preset.cursor as CursorOptions),
+    ...(overrides.cursor as Partial<CursorOptions> | undefined),
+  };
 
-	const mergedCursor: Required<TerminalCursorOptions> = {
-		shape: overrideCursor.shape ?? baseCursorTheme.shape!,
-		blink: overrideCursor.blink ?? baseCursorTheme.blink!,
-		blinkRate: overrideCursor.blinkRate ?? baseCursorTheme.blinkRate!,
-		color: overrideCursor.color ?? baseCursorTheme.color!,
-		solidBlock: overrideCursor.solidBlock ?? baseCursorTheme.solidBlock!,
-	};
+  const merged: TerminalTheme = {
+    ...preset,
+    ...overrides,
+    cursor: mergedCursor,
+  };
 
-	return {
-		backgroundColor: merged.backgroundColor!,
-		textColor: merged.textColor!,
-		promptColor: merged.promptColor!,
-		fontFamily: merged.fontFamily!,
-		fontSize: merged.fontSize!,
-		lineHeight: merged.lineHeight!,
-		cursor: mergedCursor,
-	};
+  return {
+    backgroundColor: merged.backgroundColor!,
+    textColor: merged.textColor!,
+    promptColor: merged.promptColor!,
+    fontFamily: merged.fontFamily!,
+    fontSize: merged.fontSize!,
+    lineHeight: merged.lineHeight!,
+    cursor: merged.cursor!,
+  };
 }
 
-function resolveChrome(
-  windowChrome: TerminalProps["windowChrome"]
-): ResolvedChrome {
-  // Headless / no chrome at all
-  if (!windowChrome || windowChrome === "none") {
+function resolveChrome(windowChromeProp: TerminalProps["windowChrome"]): TerminalWindowChrome | null {
+  // Headless mode: no windowChrome
+  if (windowChromeProp === "none") {
     return null;
   }
 
-  const style: Exclude<WindowChromeStyle, "none"> =
-    typeof windowChrome === "string"
-      ? windowChrome
-      : windowChrome.style ??
-        (DEFAULT_CHROME_STYLE as Exclude<WindowChromeStyle, "none">);
+  let preset: TerminalWindowChrome = DEFAULT_WINDOW_CHROME;
+  let overrides: Partial<TerminalWindowChrome> = {};
 
-  const base = CHROME_STYLES[style];
-  const overrides: Partial<TerminalWindowChrome> =
-    typeof windowChrome === "object" ? windowChrome : {};
+  if (Array.isArray(windowChromeProp)) {
+    const [presetName, windowOverrides] = windowChromeProp;
+    // Overrides on a preset style
+    if (typeof presetName === "string") {
+      if (presetName in CHROME_STYLES) {
+        preset = CHROME_STYLES[presetName];
+      } else {
+        console.warn( `Terminal: unrecognized window chrome preset name "${presetName}", falling back to default window chrome style.`);
+      }
+    } else if (presetName != null) {
+      console.warn(`Terminal: invalid window chrome preset name in array, expected string but got ${typeof presetName}.`);
+    }
 
-  const baseButtons = base.buttonColors;
-  const overrideButtons = overrides.buttonColors ?? {};
+    if (typeof windowOverrides === "object") {
+      overrides = windowOverrides as Partial<TerminalWindowChrome>;
+    } else if (windowOverrides != null) {
+      console.warn( `Terminal: invalid window chrome overrides in array, expected object but got ${typeof windowOverrides}.`);
+    }
+  }
 
-  const buttonColors = {
-    close: overrideButtons.close ?? baseButtons.close,
-    min: overrideButtons.min ?? baseButtons.min,
-    max: overrideButtons.max ?? baseButtons.max,
-  };
+  // Preset style
+  else if (typeof windowChromeProp === "string") {
+    if (windowChromeProp in CHROME_STYLES) {
+      preset = CHROME_STYLES[windowChromeProp];
+    } else {
+      console.warn(`Terminal: unrecognised window chrome style "${windowChromeProp}", falling back to "${DEFAULT_CHROME_STYLE}".`);
+    }
+  }
 
-  const titleBarText =
-    overrides.titleBarText !== undefined
-      ? overrides.titleBarText
-      : DEFAULT_TERMINAL_TITLE;
+  // Full custom window chrome or default style overrides
+  else if (typeof windowChromeProp === "object" && windowChromeProp !== null) {
+    overrides = { ...(windowChromeProp as TerminalWindowChrome) };
+  }
 
-  const titleBarTextColor =
-    overrides.titleBarTextColor !== undefined
-      ? overrides.titleBarTextColor
-      : base.titleBarTextColor;
+  // Invalid windowChrome prop
+  else if (windowChromeProp != null) {
+    console.warn(`Terminal: invalid windowChrome prop, expected "none", string, or [string, object] but got ${typeof windowChromeProp}.`);
+  }
+
+  const merged: TerminalWindowChrome = { ...preset, ...overrides };
 
   return {
-    style,
-    buttonColors,
-    titleBarText,
-    titleBarTextColor,
-    cornerRadius: overrides.cornerRadius ?? base.cornerRadius,
-    macButtonsInnerColor: overrides.macButtonsInnerColor ?? base.macButtonsInnerColor,
+    style: merged.style,
+    cornerRadius: merged.cornerRadius!,
+    titleBarText: merged.titleBarText!,
+    titleBarTextColor: merged.titleBarTextColor!,
+    buttonColors: {
+      close: merged.buttonColors?.close,
+      min: merged.buttonColors?.min,
+      max: merged.buttonColors?.max,
+      iconColor: merged.buttonColors?.iconColor,
+    },
   };
 }
 
 // Terminal Component
-export const Terminal: React.FC<TerminalProps> = ({
+export const Terminal: React.FC<Partial<TerminalProps>> = ({
   fileStructure: fs,
   startPath = DEFAULT_START_PATH,
-  prompt = DEFAULT_PROMPT,
   welcomeMessage = DEFAULT_WELCOME_MESSAGE,
-  className,
-  theme = DEFAULT_THEME_NAME,
-  windowChrome: windowChromeProp = DEFAULT_CHROME_STYLE,
+  prompt = DEFAULT_PROMPT,
+  windowChrome,
+  theme,
   extraCommands,
+  className,
 }) => {
-  const { state, setInput, submit, complete, navigateHistory } =
-    useTerminalEngine(fs, startPath, extraCommands);
+  const resolvedWindowChrome = useMemo(() => resolveChrome(windowChrome), [windowChrome]);
+  const resolvedTheme = useMemo(() => resolveTheme(theme), [theme]);
   const [showBanner, setShowBanner] = useState(!!welcomeMessage);
+
+  const { state, setInput, submit, complete, navigateHistory, interrupt } =
+    useTerminalEngine(fs, startPath, extraCommands);
 
   const inputRef = useRef<HTMLInputElement>(null);
   const bodyRef = useRef<HTMLDivElement>(null);
@@ -341,8 +329,8 @@ export const Terminal: React.FC<TerminalProps> = ({
   const themeObj = useMemo(() => resolveTheme(theme), [theme]);
   const cursor = themeObj.cursor;
   const chrome = useMemo(
-    () => resolveChrome(windowChromeProp),
-    [windowChromeProp]
+    () => resolveChrome(windowChrome),
+    [windowChrome]
   );
 
   // Auto-scroll to bottom when history / completion changes
@@ -351,32 +339,27 @@ export const Terminal: React.FC<TerminalProps> = ({
     bodyRef.current.scrollTop = bodyRef.current.scrollHeight;
   }, [state.history, state.completion]);
 
-  // CSS variables
-  const cssVars = useMemo<React.CSSProperties>(() => {
-    const baseChrome = chrome ?? CHROME_STYLES[DEFAULT_CHROME_STYLE];
-    const buttons = baseChrome.buttonColors;
-
+  // CSS Variables
+  const cssVariables = useMemo<React.CSSProperties>(() => {
     const vars: React.CSSProperties = {
-      // make background transparent in headless mode
-      "--rt-bg": chrome ? themeObj.backgroundColor : "transparent",
-
-      "--rt-textColor": themeObj.textColor,
-      "--rt-promptColor": themeObj.promptColor,
-      "--rt-font": themeObj.fontFamily,
-      "--rt-font-size": themeObj.fontSize,
-      "--rt-line-height": themeObj.lineHeight,
-      "--rt-corner-radius": `${baseChrome.cornerRadius}px`,
-      "--rt-titlebar-textColor": baseChrome.titleBarTextColor,
-      "--rt-btn-close": buttons.close,
-      "--rt-btn-min": buttons.min,
-      "--rt-btn-max": buttons.max,
-      "--rt-cursor-color": cursor.color,
-      "--rt-cursor-rate": `${cursor.blinkRate}ms`,
-      "--rt-mac-buttons-inner-color": chrome?.macButtonsInnerColor ?? baseChrome.macButtonsInnerColor,
+      "--rt-background": resolvedWindowChrome ? resolvedTheme.backgroundColor : "transparent",
+      "--rt-textColor": resolvedTheme.textColor,
+      "--rt-promptColor": resolvedTheme.promptColor,
+      "--rt-font": resolvedTheme.fontFamily,
+      "--rt-font-size": resolvedTheme.fontSize,
+      "--rt-line-height": resolvedTheme.lineHeight,
+      "--rt-corner-radius": `${resolvedWindowChrome?.cornerRadius}px`,
+      "--rt-titlebar-textColor": resolvedWindowChrome?.titleBarTextColor,
+      "--rt-btn-close": resolvedWindowChrome?.buttonColors.close,
+      "--rt-btn-min": resolvedWindowChrome?.buttonColors.min,
+      "--rt-btn-max": resolvedWindowChrome?.buttonColors.max,
+      "--rt-cursor-color": resolvedTheme.cursor.color,
+      "--rt-cursor-rate": `${resolvedTheme.cursor.blinkRate}ms`,
+      "--rt-icon-color": resolvedWindowChrome?.buttonColors.iconColor,
     } as React.CSSProperties;
 
     return vars;
-  }, [themeObj, chrome, cursor]);
+  }, [resolvedWindowChrome, resolvedTheme]);
 
   // Cursor Blink Logic
   const initialTimeoutRef = useRef<number | null>(null);
@@ -480,37 +463,81 @@ export const Terminal: React.FC<TerminalProps> = ({
   };
 
   return (
-    <div className={`rt-wrap ${className ?? ""}`} style={cssVars}>
-      {/* don't add a "none" class and skip titlebar when headless (chrome === null) */}
-      <div className={`rt-window ${chrome ? chrome.style : ""}`}>
-        {chrome ? (
-          <div className="rt-titlebar">
-            {chrome.style === "mac" ? (
-              <MacOsTrafficLight />
-            ) : (
-              <div className="rt-traffic">
-                <span className="rt-traffic-dot close" />
-                <span className="rt-traffic-dot min" />
-                <span className="rt-traffic-dot max" />
-              </div>
+    <div className={`${className ?? ""}`} style={cssVariables}>
+      <div className={`rt-window ${resolvedWindowChrome ? resolvedWindowChrome.style : ""}`}>
+        {resolvedWindowChrome && (
+          <div className={`rt-titlebar ${resolvedWindowChrome.style}`}>
+            {resolvedWindowChrome.style === "mac" && (
+              <>
+                <div className="rt-window-controls mac" aria-hidden="true">
+                  <span className="rt-window-control close mac" role="presentation" title="Close">
+                    <MacCloseIcon />
+                  </span>
+                  <span className="rt-window-control min mac" role="presentation" title="Minimise">
+                    <MacMinIcon />
+                  </span>
+                  <span className="rt-window-control max mac" role="presentation" title="Zoom">
+                    <MacMaxIcon />
+                  </span>
+                </div>
+                <div className="rt-title mac">
+                  {resolvedWindowChrome.titleBarText}
+                </div>
+              </>
             )}
-            <div className="rt-title">{chrome.titleBarText}</div>
+
+            {resolvedWindowChrome.style === "windows" && (
+              <>
+                <div className="rt-title windows">
+                  {resolvedWindowChrome.titleBarText}
+                </div>
+                <div className="rt-window-controls windows" aria-hidden="true">
+                  <span className="rt-window-control min windows" role="presentation" title="Minimise">
+                    <WinMinIcon />
+                  </span>
+                  <span className="rt-window-control max windows" role="presentation" title="Maximise">
+                    <WinMaxIcon />
+                  </span>
+                  <span className="rt-window-control close windows" role="presentation" title="Close">
+                    <WinCloseIcon />
+                  </span>
+                </div>
+              </>
+            )}
+
+            {resolvedWindowChrome.style === "linux" && (
+              <>
+                <div className="rt-title linux">
+                  {resolvedWindowChrome.titleBarText}
+                </div>
+                <div className="rt-window-controls linux" aria-hidden="true">
+                  <span className="rt-window-control min linux" role="presentation" title="Minimise">
+                    <LinuxMinIcon />
+                  </span>
+                  <span className="rt-window-control max linux" role="presentation" title="Maximise">
+                    <LinuxMaxIcon />
+                  </span>
+                  <span className="rt-window-control close linux" role="presentation" title="Close">
+                    <LinuxCloseIcon />
+                  </span>
+                </div>
+              </>
+            )}
           </div>
-        ) : null}
+        )}
+
         <div className="rt-body" ref={bodyRef}>
           {showBanner && welcomeMessage ? (
             <div className="rt-welcome-message">{welcomeMessage}</div>
           ) : null}
 
-          {state.history.map((h, i) => (
-            <div key={i} className="rt-row">
-              {h.in && (
-                <div>
-                  <span className="rt-prompt">{prompt}</span>
-                  {h.in}
-                </div>
-              )}
-              {h.out !== undefined && <div>{h.out}</div>}
+          {state.history.map(({ in: input, out }, index) => (
+            <div key={index} className="rt-row">
+              <div>
+                <span className="rt-prompt">{prompt}</span>
+                {input}
+              </div>
+              {out && <div>{out}</div>}
             </div>
           ))}
 
@@ -577,24 +604,13 @@ export const Terminal: React.FC<TerminalProps> = ({
             </div>
           </div>
 
-            {/* Completion Options Menu */}
-            {state.completion && state.completion.options.length > 1 && (
-            <div className="rt-row rt-completions-row">
-              <div className="rt-completions">
-                {state.completion.options.map((opt, idx) => (
-                  <span
-                    key={opt}
-                    className={
-                      "rt-completion-option" +
-                      (idx === state.completion.index
-                        ? " rt-completion-option--active"
-                        : "")
-                    }
-                  >
-                    {opt}
-                  </span>
-                ))}
-              </div>
+          {state.completion && state.completion.options.length > 1 && (
+            <div className="rt-row rt-completion-options">
+              {state.completion.options.map((option, index) => (
+                <span key={index} className="rt-completion-option">
+                  {option}
+                </span>
+              ))}
             </div>
           )}
         </div>
