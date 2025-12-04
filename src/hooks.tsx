@@ -1,14 +1,23 @@
+// useTerminalEngine.ts
 import React, {
   useCallback,
   useMemo,
   useRef,
   useState,
 } from "react";
-import type { FSNode, DirectoryNode, FileNode, CompletionState, HistoryEntry, ExtraCommands } from "./types";
+import type {
+  FSNode,
+  DirectoryNode,
+  FileNode,
+  CompletionState,
+  HistoryEntry,
+  ExtraCommands,
+  ExtraCommandDefinition,
+  ExtraCommandFileScope,
+} from "./types";
 
-const COMMANDS = ["help", "ls", "cd", "cat", "echo", "pwd", "clear"];
-
-/* ---------- Type guards ---------- */
+// Built-in commands
+const BUILTIN_COMMANDS = ["help", "ls", "cd", "cat", "echo", "pwd", "clear"];
 
 function isDirectory(node: FSNode | undefined | null): node is DirectoryNode {
   return !!node && typeof node === "object" && node.kind === "directory";
@@ -29,8 +38,6 @@ function isLinkFile(
 ): node is FileNode & { fileType: "link" } {
   return isFile(node) && node.fileType === "link";
 }
-
-/* ---------- Path helpers ---------- */
 
 function normalizePath(path: string): string {
   const parts = path.split("/").filter(Boolean);
@@ -59,80 +66,118 @@ function longestCommonPrefix(strings: string[]): string {
   return prefix;
 }
 
-/* ---------- Hook ---------- */
+function getPathCompletionScopeForCommand(
+  cmd: string,
+  extraCommands?: ExtraCommands
+): ExtraCommandFileScope {
+  // Built-in commands
+  if (cmd === "cd") return "directories";
+  if (cmd === "cat") return "files";
 
+  const def: ExtraCommandDefinition | undefined =
+    extraCommands && extraCommands[cmd];
+
+  if (!def) {
+    return "none";
+  }
+
+  const { completion } = def;
+  const mode = completion?.mode ?? "none";
+  if (mode === "none") return "none";
+
+  // mode === "paths"
+  return completion.fileScope ?? "any";
+}
+
+// main hook
 export function useTerminalEngine(
   fs: DirectoryNode,
   startPath = "/",
   extraCommands?: ExtraCommands
 ) {
-   const [path, setPath] = useState<string>(normalizePath(startPath));
-   const [history, setHistory] = useState<HistoryEntry[]>([]);
-   const [input, setInput] = useState("");
-   const [completion, setCompletion] = useState<CompletionState | null>(null);
-   const previousCommandsRef = useRef<string[]>([]);
-   const [historyIndex, setHistoryIndex] = useState<number | null>(null);
-   const previousDirRef = useRef<string | null>(null);
-   const cwdNode = useMemo<DirectoryNode | null>(() => {
-     const segments = normalizePath(path).split("/").filter(Boolean);
-     let current: FSNode = fs;
-     for (const segment of segments) {
-       if (!isDirectory(current) || !(segment in current.entries)) return null;
-       current = current.entries[segment];
-     }
-     return isDirectory(current) ? current : null;
-   }, [fs, path]);
+  const [path, setPath] = useState<string>(normalizePath(startPath));
+  const [history, setHistory] = useState<HistoryEntry[]>([]);
+  const [input, setInput] = useState("");
+  const [completion, setCompletion] = useState<CompletionState | null>(null);
+  const [historyIndex, setHistoryIndex] = useState<number | null>(null);
+  const [cwdPathPrev, setCwdPathPrev] = useState<string | null>(null);
 
-   const resolvePath = useCallback(
-     (p: string): string => {
-       if (!p || p === ".") return path;
-       if (p.startsWith("/")) return normalizePath(p);
-       return normalizePath(`${path}/${p}`);
-     },
-     [path]
-   );
+  const previousCommandsRef = useRef<string[]>([]);
 
-   const getNodeAt = useCallback(
-     (p: string): FSNode | undefined => {
-       const segments = normalizePath(p).split("/").filter(Boolean);
-       let current: FSNode = fs;
+  const cwdNode = useMemo<DirectoryNode | null>(() => {
+    const segments = normalizePath(path).split("/").filter(Boolean);
+    let current: FSNode = fs;
 
-       for (const segment of segments) {
-         if (!isDirectory(current) || !(segment in current.entries)) return undefined;
-         current = current.entries[segment];
-       }
+    for (const segment of segments) {
+      if (!isDirectory(current) || !(segment in current.entries)) return null;
+      current = current.entries[segment];
+    }
 
-       return current;
-     },
-     [fs]
-   );
+    return isDirectory(current) ? current : null;
+  }, [fs, path]);
 
-   const run = useCallback(
-     (line: string): HistoryEntry => {
-       const trimmed = line.trim();
-       const makeEntry = (out?: React.ReactNode): HistoryEntry => ({
-         in: trimmed,
-         out,
-       });
+  const allCommands = useMemo(
+    () => [...BUILTIN_COMMANDS, ...Object.keys(extraCommands ?? {})],
+    [extraCommands]
+  );
 
-       if (!trimmed) return makeEntry();
+  const resolvePath = useCallback(
+    (p: string): string => {
+      if (!p || p === ".") return path;
+      if (p.startsWith("/")) return normalizePath(p);
+      return normalizePath(`${path}/${p}`);
+    },
+    [path]
+  );
 
-       const [cmd, ...args] = trimmed.split(/\s+/);
+  const getNodeAt = useCallback(
+    (p: string): FSNode | undefined => {
+      const segments = normalizePath(p).split("/").filter(Boolean);
+      let current: FSNode = fs;
 
-      if (extraCommands && typeof extraCommands[cmd] === "function") {
+      for (const segment of segments) {
+        if (!isDirectory(current) || !(segment in current.entries)) return undefined;
+        current = current.entries[segment];
+      }
+
+      return current;
+    },
+    [fs]
+  );
+
+  const run = useCallback(
+    (line: string): HistoryEntry => {
+      const trimmed = line.trim();
+
+      const makeEntry = (out?: React.ReactNode): HistoryEntry => ({
+        in: trimmed,
+        out,
+      });
+
+      if (!trimmed) return makeEntry();
+
+      const [cmd, ...args] = trimmed.split(/\s+/);
+
+      // ---------- Extra commands ----------
+      const extraDef = extraCommands?.[cmd];
+      if (extraDef) {
         try {
-          const out = extraCommands[cmd](args, (p: string) => getNodeAt(resolvePath(p)) ?? null);
+          const out = extraDef.run(args, {
+            getNodeAt: (p: string) => getNodeAt(resolvePath(p)) ?? null,
+            resolvePath,
+            cwd: cwdNode,
+            path,
+          });
           return makeEntry(out);
         } catch (err) {
+          console.error(`Terminal: error executing extra command "${cmd}"`, err);
           return makeEntry(`error: executing ${cmd}`);
         }
       }
 
-       /* ---- Built-in commands ---- */
-
-       if (cmd === "pwd") {
-         return makeEntry(path);
-       }
+      if (cmd === "pwd") {
+        return makeEntry(path);
+      }
 
       if (cmd === "clear") {
         setHistory([]);
@@ -148,12 +193,10 @@ export function useTerminalEngine(
           return makeEntry(`ls: cannot access '${target}': No such file or directory`);
         }
 
-        // If it's a file: just print its name
         if (isFile(node)) {
           return makeEntry(target);
         }
 
-        // If it's a directory: list entries
         if (isDirectory(node)) {
           const entries = Object.keys(node.entries).sort();
           return makeEntry(entries.join("  ") || "(empty)");
@@ -166,14 +209,19 @@ export function useTerminalEngine(
         const rawTarget = args[0];
 
         if (rawTarget === "-") {
-          const prev = previousDirRef.current;
-          if (!prev) return makeEntry(`cd: OLDPWD not set`);
-          const node = getNodeAt(prev);
-          if (!node || !isDirectory(node)) return makeEntry(`cd: ${prev}: No such file or directory`);
+          if (!cwdPathPrev) {
+            return makeEntry("cd: OLDPWD not set");
+          }
+
+          const prevNode = getNodeAt(cwdPathPrev);
+          if (!prevNode || !isDirectory(prevNode)) {
+            return makeEntry(`cd: ${cwdPathPrev}: No such file or directory`);
+          }
+
           const old = path;
-          previousDirRef.current = old;
-          setPath(prev);
-          return makeEntry(prev);
+          setCwdPathPrev(old);
+          setPath(cwdPathPrev);
+          return makeEntry(cwdPathPrev);
         }
 
         const targetPath = resolvePath(rawTarget ?? "/");
@@ -187,8 +235,7 @@ export function useTerminalEngine(
           return makeEntry(`cd: not a directory: ${rawTarget}`);
         }
 
-        // record previous directory for `cd -`
-        previousDirRef.current = path;
+        setCwdPathPrev(path);
         setPath(targetPath);
         return makeEntry();
       }
@@ -213,7 +260,6 @@ export function useTerminalEngine(
           );
         }
 
-        // Fallback for future file types
         return makeEntry("");
       }
 
@@ -222,12 +268,12 @@ export function useTerminalEngine(
       }
 
       if (cmd === "help") {
-        return makeEntry(`Commands: ${COMMANDS.join(", ")}`);
+        return makeEntry(`Commands: ${allCommands.join(", ")}`);
       }
 
       return makeEntry(`command not found: ${cmd}`);
     },
-    [getNodeAt, path, resolvePath]
+    [allCommands, cwdNode, extraCommands, getNodeAt, path, resolvePath, setHistory, cwdPathPrev]
   );
 
   const submit = useCallback(() => {
@@ -235,7 +281,6 @@ export function useTerminalEngine(
     const entry = run(input);
     const cmd = trimmed.split(/\s+/)[0];
 
-    // For `clear` don't record history 
     if (cmd === "clear") {
       setInput("");
       setHistoryIndex(null);
@@ -290,12 +335,13 @@ export function useTerminalEngine(
     const raw = input;
     if (!raw.trim()) return;
 
-    const tokens = raw.split(/\s+/);
+    const endsWithSpace = /\s$/.test(raw);
+    const tokens = raw.trim().split(/\s+/);
     if (!tokens.length) return;
 
-    const isFirstToken = tokens.length === 1;
     const lastToken = tokens[tokens.length - 1];
-    if (!lastToken) return;
+    const cmd = tokens[0];
+    const isKnownCommand = allCommands.includes(cmd);
 
     const replaceLastToken = (replacement: string) => {
       const nextTokens = [...tokens];
@@ -306,7 +352,6 @@ export function useTerminalEngine(
     if (completion && completion.seedInput === raw && completion.options.length > 1) {
       const nextIndex = (completion.index + 1) % completion.options.length;
       const choice = completion.options[nextIndex];
-
       let newInput = raw;
 
       if (completion.kind === "command") {
@@ -317,9 +362,13 @@ export function useTerminalEngine(
         const { basePart } = completion;
         const replacement = basePart === "." ? choice : `${basePart}/${choice}`;
 
-        const nextTokens = [...tokens];
-        nextTokens[nextTokens.length - 1] = replacement;
-        newInput = nextTokens.join(" ");
+        if (tokens.length === 1 && endsWithSpace) {
+          newInput = `${cmd} ${replacement}`;
+        } else {
+          const nextTokens = [...tokens];
+          nextTokens[nextTokens.length - 1] = replacement;
+          newInput = nextTokens.join(" ");
+        }
       }
 
       setInput(newInput);
@@ -333,8 +382,11 @@ export function useTerminalEngine(
       setCompletion(null);
     }
 
-    if (isFirstToken) {
-      const matches = COMMANDS.filter((c) => c.startsWith(lastToken));
+    // ----- 1) Command-name completion -----
+    const isCommandOnly = tokens.length === 1 && !endsWithSpace;
+
+    if (isCommandOnly) {
+      const matches = allCommands.filter((c) => c.startsWith(lastToken));
       if (!matches.length) return;
 
       if (matches.length === 1) {
@@ -363,34 +415,57 @@ export function useTerminalEngine(
       return;
     }
 
-    const cmd = tokens[0];
-    const hasSlash = lastToken.includes("/");
+    // ----- 2) If the command itself is unknown, DO NOT complete paths -----
+    if (!isKnownCommand) {
+      return;
+    }
+
+    // Determine how this command wants its arguments autocompleted
+    const scope = getPathCompletionScopeForCommand(cmd, extraCommands);
+
+    // "none" means: do not autocomplete arguments at all, even if there is a space.
+    if (scope === "none") {
+      return;
+    }
+
+    // ----- 3) Path / arg completion -----
+    const argToken =
+      tokens.length === 1 && endsWithSpace ? "" : tokens[tokens.length - 1];
+
+    const hasSlash = argToken.includes("/");
 
     const basePart = hasSlash
-      ? lastToken.slice(0, lastToken.lastIndexOf("/"))
+      ? argToken.slice(0, argToken.lastIndexOf("/"))
       : ".";
 
     const prefixPart = hasSlash
-      ? lastToken.slice(lastToken.lastIndexOf("/") + 1)
-      : lastToken;
+      ? argToken.slice(argToken.lastIndexOf("/") + 1)
+      : argToken;
 
     const basePath = resolvePath(basePart);
     const baseNode = getNodeAt(basePath);
     if (!isDirectory(baseNode)) return;
 
     const entries = Object.entries(baseNode.entries);
+
     const matches = entries
       .filter(([name, node]) => {
-        if (!name.startsWith(prefixPart)) return false;
+        if (prefixPart && !name.startsWith(prefixPart)) return false;
 
-        if (cmd === "cd") {
-          return isDirectory(node);
+        switch (scope) {
+          case "directories":
+            return isDirectory(node);
+          case "files":
+            return isFile(node);
+          case "textFiles":
+            return isTextFile(node);
+          case "linkFiles":
+            return isLinkFile(node);
+          case "any":
+            return true;
+          default:
+            return true;
         }
-        if (cmd === "cat") {
-          return isFile(node);
-        }
-
-        return true;
       })
       .map(([name]) => name);
 
@@ -399,21 +474,37 @@ export function useTerminalEngine(
     const buildReplacement = (name: string) =>
       basePart === "." ? name : `${basePart}/${name}`;
 
+    // Single match -> inline completion
     if (matches.length === 1) {
-      // single match? just complete it
-      replaceLastToken(buildReplacement(matches[0]));
+      const replacement = buildReplacement(matches[0]);
+
+      if (tokens.length === 1 && endsWithSpace) {
+        setInput(`${cmd} ${replacement}`);
+      } else {
+        const nextTokens = [...tokens];
+        nextTokens[nextTokens.length - 1] = replacement;
+        setInput(nextTokens.join(" "));
+      }
+
       setCompletion(null);
       return;
     }
-    
+
+    // Multiple matches -> longest common prefix + completion state
     const prefix = longestCommonPrefix(matches);
     let newInput = raw;
 
     if (prefix.length > prefixPart.length) {
-      const nextTokens = [...tokens];
       const newName = buildReplacement(prefix);
-      nextTokens[nextTokens.length - 1] = newName;
-      newInput = nextTokens.join(" ");
+
+      if (tokens.length === 1 && endsWithSpace) {
+        newInput = `${cmd} ${newName}`;
+      } else {
+        const nextTokens = [...tokens];
+        nextTokens[nextTokens.length - 1] = newName;
+        newInput = nextTokens.join(" ");
+      }
+
       setInput(newInput);
     }
 
@@ -424,7 +515,19 @@ export function useTerminalEngine(
       seedInput: newInput,
       basePart,
     });
-  }, [completion, getNodeAt, input, resolvePath]);
+  }, [allCommands, completion, extraCommands, getNodeAt, input, resolvePath, setInput]);
+
+  const interrupt = useCallback(() => {
+    const entry: HistoryEntry = {
+      in: input,
+      out: undefined,
+    };
+
+    setHistory((prev) => [...prev, entry]);
+    setInput("");
+    setHistoryIndex(null);
+    setCompletion(null);
+  }, [input]);
 
   return {
     state: { path, cwdNode, history, input, completion },
@@ -434,5 +537,6 @@ export function useTerminalEngine(
     submit,
     complete,
     navigateHistory,
+    interrupt,
   };
 }

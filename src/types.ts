@@ -1,8 +1,46 @@
-import { PRESET_THEMES } from "./themes";
+// types.ts
+import type React from "react";
+
+/* ---------- Theme & chrome ---------- */
+
+export type BuiltInTheme = "dracula" | "solarizedDark" | "solarizedLight" | "monokai";
 
 export type WindowChromeStyle = "mac" | "windows" | "linux" | "none";
 
 export type CursorShape = "block" | "line" | "underline";
+
+export type CursorOptions = {
+  shape: CursorShape;
+  solidBlock?: boolean;
+  color: string;
+  blink: boolean;
+  blinkRate: number;
+};
+
+export type TerminalTheme = Partial<{
+  backgroundColor: string;
+  textColor: string;
+  promptColor: string;
+  fontFamily: string;
+  fontSize: string;
+  lineHeight: string;
+  cursor: Partial<CursorOptions>;
+}>;
+
+export type TerminalWindowChrome = {
+  style: WindowChromeStyle;
+  cornerRadius: number;
+  titleBarText: string;
+  titleBarTextColor: string;
+  buttonColors: {
+    close: string;
+    min: string;
+    max: string;
+    iconColor: string;
+  };
+};
+
+/* ---------- File system ---------- */
 
 export type TextFileNode = {
   kind: "file";
@@ -27,52 +65,32 @@ export type DirectoryNode = {
 
 export type FSNode = FileNode | DirectoryNode;
 
-export type TerminalCursorOptions = {
-  shape?: CursorShape;
-  solidBlock?: boolean;
-  color?: string;
-  blink?: boolean;
-  blinkRate?: number;
+export type ExtraCommandFileScope =
+  | "none"
+  | "any"
+  | "directories"
+  | "files"
+  | "textFiles"
+  | "linkFiles";
+
+export type ExtraCommandCompletionConfig = {
+  mode?: "paths" | "none";
+  fileScope?: Exclude<ExtraCommandFileScope, "none">;
 };
 
-export type TerminalTheme = Partial<{
-  backgroundColor: string;
-  textColor: string;
-  promptColor: string;
-  fontFamily: string;
-  fontSize: string;
-  lineHeight: string;
-  cursor?: TerminalCursorOptions;
-}>;
-
-export type TerminalWindowChrome = {
-  style: Exclude<WindowChromeStyle, "none">;
-  titleBarText?: string;
-  titleBarTextColor?: string;
-  buttonColors?: {
-    close?: string;
-    min?: string;
-    max?: string;
-  };
-  macButtonsInnerColor?: string;
-  cornerRadius?: number;
+export type ExtraCommandContext = {
+  getNodeAt: (path: string) => FSNode | null;
+  resolvePath: (path: string) => string;
+  cwd: DirectoryNode | null;
+  path: string;
 };
 
-export type ExtraCommands = Record<
-  string,
-  (args: string[], getNodeAt: (path: string) => FSNode | null) => React.ReactNode
->;
-
-export type TerminalProps = {
-  fileStructure: DirectoryNode;
-  startPath?: string;
-  welcomeMessage?: string;
-  prompt?: string;
-  windowChrome?: WindowChromeStyle | TerminalWindowChrome;
-  theme?: TerminalTheme | keyof typeof PRESET_THEMES | [keyof typeof PRESET_THEMES, TerminalTheme];
-  extraCommands?: ExtraCommands;
-  className?: string;
+export type ExtraCommandDefinition = {
+  run: (args: string[], ctx: ExtraCommandContext) => React.ReactNode;
+  completion?: ExtraCommandCompletionConfig;
 };
+
+export type ExtraCommands = Record<string, ExtraCommandDefinition>;
 
 export type CompletionState =
   | {
@@ -92,4 +110,21 @@ export type CompletionState =
 export type HistoryEntry = {
   in: string;
   out?: React.ReactNode;
+};
+
+export type TerminalProps = {
+  fileStructure: DirectoryNode;
+  startPath: string;
+  welcomeMessage: string;
+  prompt: string;
+  windowChrome:
+    | WindowChromeStyle
+    | Partial<TerminalWindowChrome>
+    | [WindowChromeStyle, Partial<TerminalWindowChrome>];
+  theme:
+    | BuiltInTheme
+    | Partial<TerminalTheme>
+    | [BuiltInTheme, Partial<TerminalTheme>];
+  extraCommands?: ExtraCommands;
+  className?: string;
 };

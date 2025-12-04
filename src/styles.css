@@ -1,104 +1,129 @@
-.rt-wrap {
-  font-family: var(--rt-font);
-  font-size: var(--rt-font-size, 14px);
-  line-height: var(--rt-line-height, 1.6);
-  color: var(--rt-textColor);
-}
-
 .rt-window {
-  background-color: var(--rt-bg);
-  color: var(--rt-textColor);
+  background-color: var(--rt-background);
   border-radius: var(--rt-corner-radius);
-  overflow: hidden;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
-  border: 1px solid var(--rt-border-color);
-  max-height: 60vh;
+  font-family: var(--rt-font);
+  font-size: var(--rt-font-size);
+  color: var(--rt-textColor);
+  line-height: var(--rt-line-height);
+  clip-path: inset(0 round var(--rt-corner-radius));
   display: flex;
   flex-direction: column;
-}
-
-.rt-window > * {
-  position: relative;
-  z-index: 1;
+  overflow: hidden;
 }
 
 .rt-titlebar {
   display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  height: 32px;
-  padding: 0 10px;
-  background-color: var(--rt-titlebar-bg);
-  color: var(--rt-titlebar-textColor);
-  font-size: 11px;
-  user-select: none;
+  align-items: flex-start;
+  position: relative;
 }
 
-.rt-traffic {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
+.rt-titlebar.mac {
+  padding: 12px;
 }
 
-.rt-traffic-dot {
-  width: 11px;
-  height: 11px;
-  border-radius: 100%;
-  background-color: var(--rt-btn-close);
+.rt-titlebar.windows {
+  justify-content: space-between;
+  background-color: rgba(0, 0, 0, 0.181);
 }
 
-.rt-traffic-dot.close { background: var(--rt-btn-close); }
-.rt-traffic-dot.min { background: var(--rt-btn-min); }
-.rt-traffic-dot.max { background: var(--rt-btn-max); }
+.rt-titlebar.linux {
+  justify-content: flex-end;
+}
 
 .rt-title {
-  font-weight: 500;
-  opacity: 0.9;
+  font-size: 13px;
+  color: var(--rt-titlebar-textColor);
+  pointer-events: none;
 }
 
-.rt-window.mac .rt-traffic-dot {
-  position: relative;
-  transition: transform 120ms ease;
-}
-
-.rt-window.mac .mac-icon {
+.rt-title.mac,
+.rt-title.linux {
   position: absolute;
   left: 50%;
   top: 50%;
-  transform: translate(-50%, -50%) scale(0.92);
-  width: 9px;
-  height: 9px;
-  pointer-events: none;
+  transform: translate(-50%, -50%);
+}
+
+.rt-title.windows {
+  margin-left: 6px;
+}
+
+.rt-window-controls {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--rt-icon-color);
+}
+
+.rt-window-controls.mac {
+  gap: 8px;
+}
+
+.rt-window-controls.mac svg {
   opacity: 0;
-  transition: opacity 140ms ease, transform 140ms ease;
-  z-index: 3;
 }
 
-.mac-icon svg {
-  width: 100%;
-  height: 100%;
-  display: block;
-  color: var(--rt-mac-buttons-inner-color, #333);
-}
-
-.rt-window.mac .rt-traffic:hover .mac-icon {
+.rt-window-controls.mac:hover svg {
   opacity: 1;
 }
 
-.rt-window.mac .rt-titlebar {
-  justify-content: flex-start;
+.rt-window-control.mac {
+  display: flex;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  padding: 1px;
 }
 
-.rt-window.mac .rt-title {
-  margin-left: 4px;
+.rt-window-control.close.mac { background: var(--rt-btn-close); }
+.rt-window-control.min.mac  { background: var(--rt-btn-min); }
+.rt-window-control.max.mac  { background: var(--rt-btn-max); }
+
+.rt-window-control.windows {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 20px;
 }
 
-.rt-window.linux .rt-titlebar {
-  justify-content: space-between;
+.rt-window-control.close.windows:hover { background: var(--rt-btn-close); }
+.rt-window-control.min.windows:hover  { background: var(--rt-btn-min); }
+.rt-window-control.max.windows:hover  { background: var(--rt-btn-max); }
+
+.rt-window-control.windows svg,
+.rt-window-control.linux svg {
+  width: 60%;
+  height: 60%;
+  display: block;
 }
 
-.rt-window.windows .rt-titlebar {
-  justify-content: space-between;
+.rt-window-control.close.linux svg {
+  width: 45%;
+  height: 45%;
+}
+
+.rt-window-control.linux {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+}
+
+.rt-window-control.close.linux:hover::before { background: var(--rt-btn-close); }
+.rt-window-control.min.linux:hover::before  { background: var(--rt-btn-min); }
+.rt-window-control.max.linux:hover::before  { background: var(--rt-btn-max); }
+
+.rt-window-control.linux::before {
+  content: "";
+  position: absolute;
+  width: 70%;
+  height: 70%;
+  border-radius: 50%;
+  z-index: 1;
 }
 
 .rt-body {
@@ -106,6 +131,7 @@
   overflow: auto;
   flex: 1;
 }
+
 
 .rt-row {
   margin: 4px 0;
@@ -188,7 +214,7 @@
   animation: none;
 }
 
-.rt-completions-row {
+.rt-completion-options {
   margin-top: 2px;
 }
 
