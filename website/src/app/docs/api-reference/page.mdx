@@ -1,0 +1,57 @@
+# API Reference
+
+## Terminal Component
+
+The main component of the library.
+
+```tsx
+import { Terminal } from "one-terminal";
+```
+
+### Props
+
+| Prop | Type | Default | Description |
+| :--- | :--- | :--- | :--- |
+| `fileStructure` | `DirectoryNode` | **Required** | The virtual file system structure. |
+| `startPath` | `string` | `"/"` | The initial working directory. |
+| `welcomeMessage` | `string` | `""` | Message shown at the top of the terminal session. |
+| `prompt` | `string` | `"guest@{cwd}:$ "` | Command prompt template. Use `{cwd}` for current directory. |
+| `windowChrome` | `WindowChromeStyle \| object` | `"mac"` | Window decoration style. |
+| `theme` | `BuiltInTheme \| object` | `"dracula"` | Color theme for the terminal. |
+| `extraCommands` | `ExtraCommands` | `undefined` | Custom commands to extend functionality. |
+| `demo` | `TerminalDemoConfig` | `undefined` | Configuration for automated demo sequences. |
+
+## Types
+
+### DirectoryNode
+
+Represents a directory in the virtual file system.
+
+```typescript
+type DirectoryNode = {
+  kind: "directory";
+  entries: Record<string, FSNode>;
+};
+```
+
+### FileNode
+
+Represents a file (text or link).
+
+```typescript
+type FileNode = TextFileNode | LinkFileNode;
+
+type TextFileNode = {
+  kind: "file";
+  fileType: "text";
+  content: string;
+};
+
+type LinkFileNode = {
+  kind: "file";
+  fileType: "link";
+  href: string;
+  label?: string;
+  target?: "_blank" | "_self";
+};
+```

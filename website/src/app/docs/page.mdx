@@ -1,0 +1,39 @@
+---
+display: hidden
+---
+
+# Getting Started
+
+One Terminal is a lightweight, themeable terminal component for React.
+
+## Installation
+
+To start using the library, install it in your project:
+
+```bash
+npm install one-terminal
+```
+
+## Basic Usage
+
+Define your virtual file system and add `<Terminal />` to the page where you want your terminal to be rendered.
+
+```jsx
+import { Terminal } from "one-terminal";
+
+// Define your virtual file system
+const vfs = {
+  kind: "directory",
+  entries: {
+    readme: {
+      kind: "file",
+      fileType: "text",
+      content: "Welcome to One Terminal 👋",
+    },
+  },
+};
+
+export default function App() {
+  return <Terminal fileStructure={vfs} />;
+}
+```

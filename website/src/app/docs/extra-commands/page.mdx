@@ -1,0 +1,51 @@
+# Extra Commands
+
+You can extend the terminal's functionality by adding custom commands.
+
+## Defining Commands
+
+Pass an `extraCommands` object to the `Terminal` component. Keys are the command names, and values are the command definitions.
+
+```typescript
+import { Terminal } from "one-terminal";
+
+const commands = {
+  // Simple command that returns a string
+  hello: {
+    run: (args) => `Hello, ${args[0] || "World"}!`,
+  },
+  // Command returning a React component
+  alert: {
+    run: (args) => <span style={{ color: "red" }}>Alert: {args.join(" ")}</span>,
+  },
+};
+
+<Terminal extraCommands={commands} ... />
+```
+
+## Command Definition
+
+Each command is defined by an object with a `run` function and optional `completion` config.
+
+```typescript
+type ExtraCommandDefinition = {
+  run: (args: string[], ctx: ExtraCommandContext) => React.ReactNode;
+  completion?: {
+    mode?: "paths" | "none";
+    fileScope?: "none" | "any" | "directories" | "files" | "textFiles" | "linkFiles";
+  };
+};
+```
+
+### Context
+
+The `run` function receives a context object as the second argument.
+
+```typescript
+type ExtraCommandContext = {
+  getNodeAt: (path: string) => FSNode | null;
+  resolvePath: (path: string) => string;
+  cwd: DirectoryNode | null;
+  path: string;
+};
+```

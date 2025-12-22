@@ -1,0 +1,62 @@
+# Customization
+
+Customize the look and feel of your terminal with themes and window styles.
+
+## Themes
+
+One Terminal comes with several built-in themes. You can use them by name or provide a custom theme object.
+
+### Built-in Themes
+
+- `dracula` (default)
+- `solarizedDark`
+- `solarizedLight`
+- `monokai`
+- `light`
+
+### Custom Theme
+
+You can override specific properties of a preset or define a completely new theme.
+
+```jsx
+const customTheme = {
+  backgroundColor: "#000000",
+  textColor: "#00ff00",
+  cursor: {
+    color: "#00ff00",
+    shape: "block",
+    blink: true
+  }
+};
+
+<Terminal theme={customTheme} ... />
+```
+
+## Window Chrome
+
+Control the appearance of the window frame.
+
+### Styles
+
+- `mac` (default) - macOS style traffic lights.
+- `windows` - Windows 10/11 style controls.
+- `linux` - Generic Linux style controls.
+- `none` - No window frame.
+
+### Custom Chrome
+
+You can customize the window radius, title, and button colors.
+
+```jsx
+const customChrome = {
+  style: "mac",
+  titleBarText: "My Terminal",
+  buttonColors: {
+    close: "#ff0000",
+    min: "#ffff00",
+    max: "#00ff00"
+  }
+};
+
+<Terminal windowChrome={customChrome} ... />
+```
