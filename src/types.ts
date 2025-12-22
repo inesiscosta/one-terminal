@@ -1,13 +1,12 @@
-// types.ts
 import type React from "react";
 
-/* ---------- Theme & chrome ---------- */
-
-export type BuiltInTheme = "dracula" | "solarizedDark" | "solarizedLight" | "monokai";
+export type BuiltInTheme = "dracula" | "solarizedDark" | "solarizedLight" | "monokai" | "light";
 
 export type WindowChromeStyle = "mac" | "windows" | "linux" | "none";
 
-export type CursorShape = "block" | "line" | "underline";
+export type CursorShape = "beam" | "block" | "underline";
+
+export type DemoEndBehavior = "freeze" | "interactive" | "loop";
 
 export type CursorOptions = {
   shape: CursorShape;
@@ -40,7 +39,20 @@ export type TerminalWindowChrome = {
   };
 };
 
-/* ---------- File system ---------- */
+export type DemoScriptStep = string | {
+  line: string;
+  charDelayMs?: number;
+  afterLineDelayMs?: number;
+};
+
+export type TerminalDemoConfig = {
+  script: DemoScriptStep[];
+  defaultCharDelayMs?: number;
+  defaultAfterLineDelayMs?: number;
+  behavior?: DemoEndBehavior;
+  mode?: "run" | "type-writer";
+  loopDelayMs?: number;
+};
 
 export type TextFileNode = {
   kind: "file";
@@ -94,22 +106,23 @@ export type ExtraCommands = Record<string, ExtraCommandDefinition>;
 
 export type CompletionState =
   | {
-      kind: "command";
-      options: string[];
-      index: number;
-      seedInput: string;
-    }
+    kind: "command";
+    options: string[];
+    index: number;
+    seedInput: string;
+  }
   | {
-      kind: "path";
-      options: string[];
-      index: number;
-      seedInput: string;
-      basePart: string;
-    };
+    kind: "path";
+    options: string[];
+    index: number;
+    seedInput: string;
+    basePart: string;
+  };
 
 export type HistoryEntry = {
   in: string;
   out?: React.ReactNode;
+  prompt?: string;
 };
 
 export type TerminalProps = {
@@ -118,13 +131,15 @@ export type TerminalProps = {
   welcomeMessage: string;
   prompt: string;
   windowChrome:
-    | WindowChromeStyle
-    | Partial<TerminalWindowChrome>
-    | [WindowChromeStyle, Partial<TerminalWindowChrome>];
+  | WindowChromeStyle
+  | Partial<TerminalWindowChrome>
+  | [WindowChromeStyle, Partial<TerminalWindowChrome>];
   theme:
-    | BuiltInTheme
-    | Partial<TerminalTheme>
-    | [BuiltInTheme, Partial<TerminalTheme>];
+  | BuiltInTheme
+  | Partial<TerminalTheme>
+  | [BuiltInTheme, Partial<TerminalTheme>];
   extraCommands?: ExtraCommands;
   className?: string;
+  demo?: TerminalDemoConfig;
+  style?: React.CSSProperties;
 };

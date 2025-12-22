@@ -54,21 +54,21 @@ export const PRESET_THEMES: Record<string, TerminalTheme> = {
     fontSize: "14px",
     lineHeight: "1.6",
     cursor: {
-      shape: "line",
+      shape: "beam",
       color: "#f8f8f2",
       blink: true,
       blinkRate: 600,
     },
   },
-  githubLight: {
+  light: {
     backgroundColor: "#f6f8fa",
     textColor: "#24292e",
-    promptColor: "#0366d6",
+    promptColor: "#0EB87E",
     fontFamily: '"JetBrainsMono Nerd Font", ui-monospace, monospace',
     fontSize: "14px",
     lineHeight: "1.6",
     cursor: {
-      shape: "line",
+      shape: "beam",
       color: "#24292e",
       blink: true,
       blinkRate: 600,

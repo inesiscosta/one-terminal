@@ -34,7 +34,7 @@ export const MacMaxIcon: React.FC = () => (
 );
 
 export const WinCloseIcon: React.FC = () => (
-  <svg width="7" height="7" viewBox="0 0 48 48" aria-hidden="true">
+  <svg width="10" height="10" viewBox="0 0 48 48" aria-hidden="true">
     <line
       x1="8.5"
       y1="8.5"
@@ -57,7 +57,7 @@ export const WinCloseIcon: React.FC = () => (
 );
 
 export const WinMinIcon: React.FC = () => (
-  <svg width="7" height="7" viewBox="0 0 48 48" aria-hidden="true">
+  <svg width="10" height="10" viewBox="0 0 48 48" aria-hidden="true">
     <line
       x1="3.5"
       y1="24"
@@ -71,7 +71,7 @@ export const WinMinIcon: React.FC = () => (
 );
 
 export const WinMaxIcon: React.FC = () => (
-  <svg width="7" height="7" viewBox="0 0 48 48" aria-hidden="true">
+  <svg width="10" height="10" viewBox="0 0 48 48" aria-hidden="true">
     <path
       d="M36.5 40.5h-25c-2.209 0-4-1.791-4-4v-25c0-2.209 1.791-4 4-4h25c2.209 0 4 1.791 4 4v25c0 2.209-1.791 4-4 4z"
       fill="none"
@@ -84,7 +84,7 @@ export const WinMaxIcon: React.FC = () => (
 );
 
 export const LinuxCloseIcon: React.FC = () => (
-  <svg width="7" height="7" viewBox="0 0 48 48" aria-hidden="true">
+  <svg width="10" height="10" viewBox="0 0 48 48" aria-hidden="true">
     <line
       x1="8.5"
       y1="8.5"
@@ -107,7 +107,7 @@ export const LinuxCloseIcon: React.FC = () => (
 );
 
 export const LinuxMinIcon: React.FC = () => (
-  <svg width="7" height="7" viewBox="0 0 48 48" aria-hidden="true">
+  <svg width="10" height="10" viewBox="0 0 48 48" aria-hidden="true">
     <polyline
       points="12 18 24 30 36 18"
       fill="none"
@@ -120,7 +120,7 @@ export const LinuxMinIcon: React.FC = () => (
 );
 
 export const LinuxMaxIcon: React.FC = () => (
-  <svg width="7" height="7" viewBox="0 0 48 48" aria-hidden="true">
+  <svg width="10" height="10" viewBox="0 0 48 48" aria-hidden="true">
     <polyline
       points="12 30 24 18 36 30"
       fill="none"

@@ -73,6 +73,7 @@ function getPathCompletionScopeForCommand(
   // Built-in commands
   if (cmd === "cd") return "directories";
   if (cmd === "cat") return "files";
+  if (cmd === "ls") return "any";
 
   const def: ExtraCommandDefinition | undefined =
     extraCommands && extraCommands[cmd];
@@ -86,7 +87,7 @@ function getPathCompletionScopeForCommand(
   if (mode === "none") return "none";
 
   // mode === "paths"
-  return completion.fileScope ?? "any";
+  return completion?.fileScope ?? "any";
 }
 
 // main hook
@@ -149,9 +150,10 @@ export function useTerminalEngine(
     (line: string): HistoryEntry => {
       const trimmed = line.trim();
 
-      const makeEntry = (out?: React.ReactNode): HistoryEntry => ({
+      const makeEntry = (out?: React.ReactNode, prompt?: string): HistoryEntry => ({
         in: trimmed,
         out,
+        prompt,
       });
 
       if (!trimmed) return makeEntry();
@@ -276,10 +278,15 @@ export function useTerminalEngine(
     [allCommands, cwdNode, extraCommands, getNodeAt, path, resolvePath, setHistory, cwdPathPrev]
   );
 
-  const submit = useCallback(() => {
+  const submit = useCallback((prompt?: string) => {
     const trimmed = input.trim();
     const entry = run(input);
     const cmd = trimmed.split(/\s+/)[0];
+
+    // Persist the prompt
+    if (prompt) {
+      entry.prompt = prompt;
+    }
 
     if (cmd === "clear") {
       setInput("");
@@ -382,7 +389,6 @@ export function useTerminalEngine(
       setCompletion(null);
     }
 
-    // ----- 1) Command-name completion -----
     const isCommandOnly = tokens.length === 1 && !endsWithSpace;
 
     if (isCommandOnly) {
@@ -415,20 +421,16 @@ export function useTerminalEngine(
       return;
     }
 
-    // ----- 2) If the command itself is unknown, DO NOT complete paths -----
     if (!isKnownCommand) {
       return;
     }
 
-    // Determine how this command wants its arguments autocompleted
     const scope = getPathCompletionScopeForCommand(cmd, extraCommands);
 
-    // "none" means: do not autocomplete arguments at all, even if there is a space.
     if (scope === "none") {
       return;
     }
 
-    // ----- 3) Path / arg completion -----
     const argToken =
       tokens.length === 1 && endsWithSpace ? "" : tokens[tokens.length - 1];
 
@@ -517,10 +519,11 @@ export function useTerminalEngine(
     });
   }, [allCommands, completion, extraCommands, getNodeAt, input, resolvePath, setInput]);
 
-  const interrupt = useCallback(() => {
+  const interrupt = useCallback((prompt?: string) => {
     const entry: HistoryEntry = {
       in: input,
       out: undefined,
+      prompt,
     };
 
     setHistory((prev) => [...prev, entry]);
