@@ -1,4 +1,4 @@
-[One Terminal](https://one-terminal.inesiscosta.com/) to rule them all! A lightweight, themeable terminal component for React.
+[One Terminal](https://www.one-terminal.inesiscosta.com/) to rule them all! A lightweight, themeable terminal component for React.
 
 ## Usage
 
@@ -31,4 +31,4 @@ export default function App() {
 ```
 
 ## Documentation
-Find the full API reference in the [documentation](https://one-terminal.inesiscosta.com/getting-started).
+Find the full API reference in the [documentation](https://www.one-terminal.inesiscosta.com/docs).
