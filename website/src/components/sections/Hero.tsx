@@ -275,7 +275,7 @@ export default function HeroSection({ version = "1.0.0" }: { version?: string })
       "one-terminal-github.link": {
         kind: "file",
         fileType: "link",
-        href: "https://github.com/your-username/one-terminal",
+        href: "https://github.com/inesiscosta/one-terminal",
         label: "one-terminal on GitHub",
         target: "_blank",
       },
