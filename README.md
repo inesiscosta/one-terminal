@@ -1,4 +1,4 @@
-[One Terminal](https://www.one-terminal.inesiscosta.com/) to rule them all! A lightweight, themeable terminal component for React.
+[One Terminal](https://www.one-terminal.inesiscosta.com/) a lightweight, themeable terminal component for React.
 
 ## Usage
 
