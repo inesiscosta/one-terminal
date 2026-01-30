@@ -1,9 +1,10 @@
-import { Terminal, Folder, FileText, MapPin, MessageSquare, Trash2, HelpCircle, ChevronRight } from 'lucide-react';
+import { Terminal, FolderTree, Folder, FileText, MapPin, MessageSquare, Trash2, HelpCircle, ChevronRight } from 'lucide-react';
 
 const commands = [
   { name: 'help', description: 'Display available commands', icon: HelpCircle, color: 'text-terminal-cyan' },
   { name: 'cd', description: 'Navigate between directories', icon: ChevronRight, color: 'text-terminal-green' },
   { name: 'ls', description: 'List directory contents', icon: Folder, color: 'text-terminal-yellow' },
+  { name: 'tree', description: 'Display directory structure in a tree-like format', icon: FolderTree, color: 'text-terminal-green' },
   { name: 'cat', description: 'Display file contents', icon: FileText, color: 'text-terminal-purple' },
   { name: 'pwd', description: 'Print working directory', icon: MapPin, color: 'text-terminal-cyan' },
   { name: 'echo', description: 'Output text to terminal', icon: MessageSquare, color: 'text-terminal-green' },

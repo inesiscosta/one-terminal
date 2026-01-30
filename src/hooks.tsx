@@ -17,7 +17,7 @@ import type {
 } from "./types";
 
 // Built-in commands
-const BUILTIN_COMMANDS = ["help", "ls", "cd", "cat", "echo", "pwd", "clear"];
+const BUILTIN_COMMANDS = ["help", "ls", "tree", "cd", "cat", "echo", "pwd", "clear"];
 
 function isDirectory(node: FSNode | undefined | null): node is DirectoryNode {
   return !!node && typeof node === "object" && node.kind === "directory";
@@ -74,6 +74,7 @@ function getPathCompletionScopeForCommand(
   if (cmd === "cd") return "directories";
   if (cmd === "cat") return "files";
   if (cmd === "ls") return "any";
+  if (cmd === "tree") return "directories";
 
   const def: ExtraCommandDefinition | undefined =
     extraCommands && extraCommands[cmd];
@@ -205,6 +206,86 @@ export function useTerminalEngine(
         }
 
         return makeEntry("(unknown node type)");
+      }
+
+      if (cmd === "tree") {
+        const target = args[0] ?? ".";
+        const targetPath = resolvePath(target);
+        const node = getNodeAt(targetPath);
+
+        if (!node) {
+          return makeEntry(`tree: cannot access '${target}': No such file or directory`);
+        }
+
+        if (isFile(node)) {
+          return makeEntry(target);
+        }
+
+        type TreeItem = {
+          label: string;
+          isDirectory: boolean;
+          branch?: TreeItem[];
+        };
+
+        function buildTreeStruct(dirNode: DirectoryNode, label: string): TreeItem {
+          const entries = Object.entries(dirNode.entries).sort(([a], [b]) => a.localeCompare(b));
+          const branches: TreeItem[] = [];
+
+          for (const [entryName, entryNode] of entries) {
+            if (isDirectory(entryNode)) {
+              branches.push(buildTreeStruct(entryNode as DirectoryNode, entryName));
+            } else {
+              branches.push({ label: entryName, isDirectory: false });
+            }
+          }
+
+          return { label, isDirectory: true, branch: branches };
+        }
+
+        function buildTreeString(item: TreeItem, indent = "", isRootNode = true, isTail = true): string[] {
+          const output: string[] = [];
+
+          if (isRootNode) {
+            output.push(item.label);
+          } else {
+            let branch = "├── ";
+            if (isTail) {
+              branch = "└── ";
+            }
+            output.push(indent + branch + item.label);
+          }
+
+          if (!item.branch || item.branch.length === 0) {
+            return output;
+          }
+
+          const branchCount = item.branch.length;
+          for (let i = 0; i < branchCount; i++) {
+            const branch = item.branch[i];
+            const isEndBranch = i === branchCount - 1;
+
+            let continuation = "";
+            if (isRootNode) {
+              continuation = "";
+            } else {
+              if (isTail) {
+                continuation = "    ";
+              } else {
+                continuation = "│   ";
+              }
+            }
+
+            const branchIndent = indent + continuation;
+            const branchLines = buildTreeString(branch, branchIndent, false, isEndBranch);
+            output.push(...branchLines);
+          }
+
+          return output;
+        }
+
+        const tree = buildTreeStruct(node as DirectoryNode, target);
+        const outputLines = buildTreeString(tree);
+        return makeEntry(outputLines.join("\n"));
       }
 
       if (cmd === "cd") {
