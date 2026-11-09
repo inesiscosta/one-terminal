@@ -32,7 +32,9 @@ export default function QuickStartSection() {
             {/* Install */}
             <div className="opacity-0 animate-fade-up">
               <h3 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">
-                <span className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary text-sm font-bold">1</span>
+                <span className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary text-sm font-bold">
+                  1
+                </span>
                 Install
               </h3>
               <CodeBlock code={`npm install one-terminal`} language="bash" />
@@ -41,7 +43,9 @@ export default function QuickStartSection() {
             {/* Basic Usage */}
             <div className="opacity-0 animate-fade-up delay-200">
               <h3 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">
-                <span className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary text-sm font-bold">2</span>
+                <span className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary text-sm font-bold">
+                  2
+                </span>
                 Usage
               </h3>
               <CodeBlock code={basicUsageCode} language="tsx" showLineNumbers />
@@ -51,12 +55,8 @@ export default function QuickStartSection() {
           {/* Right Side*/}
           <div className="lg:pl-8 opacity-0 animate-fade-up delay-300 mt-0 lg:mt-35 order-first lg:order-none">
             <div>
-              <span className="text-sm font-medium text-primary uppercase tracking-wider mb-4 block">
-                Installation
-              </span>
-              <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-6">
-                Quick Start
-              </h2>
+              <span className="text-sm font-medium text-primary uppercase tracking-wider mb-4 block">Installation</span>
+              <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-6">Quick Start</h2>
               <p className="text-lg text-muted-foreground mb-6 leading-relaxed">
                 Get up and running in minutes. The only required prop is{' '}
                 <code className="px-2 py-1 rounded bg-secondary text-primary font-mono text-sm">fileStructure</code>{' '}

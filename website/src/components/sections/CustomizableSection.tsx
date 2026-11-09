@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { useState, useEffect } from 'react';
 import { Terminal, WindowChromeStyle, CursorShape } from 'one-terminal';
@@ -29,7 +29,7 @@ export default function CustomizableSection() {
   useEffect(() => {
     if (resolvedTheme === 'light') {
       // Find index of Light
-      const lightIndex = themes.findIndex(t => t.value === 'light');
+      const lightIndex = themes.findIndex((t) => t.value === 'light');
       if (lightIndex !== -1) setSelectedTheme(lightIndex);
     } else {
       // Default to Dracula (index 0) for dark mode
@@ -38,12 +38,13 @@ export default function CustomizableSection() {
   }, [resolvedTheme]);
 
   const vfs = {
-    kind: "directory" as const,
+    kind: 'directory' as const,
     entries: {
-      "welcome.md": {
-        kind: "file" as const,
-        fileType: "text" as const,
-        content: "🎨 Customize me!\nTry changing the chrome style, theme, cursor, or prompt.\nFor more customization options, check out our docs!",
+      'welcome.md': {
+        kind: 'file' as const,
+        fileType: 'text' as const,
+        content:
+          '🎨 Customize me!\nTry changing the chrome style, theme, cursor, or prompt.\nFor more customization options, check out our docs!',
       },
     },
   };
@@ -53,10 +54,8 @@ export default function CustomizableSection() {
     cursor: {
       shape: cursorShape,
       blink: true,
-    }
+    },
   };
-
-
 
   return (
     <section id="customizable" className="py-24 relative">
@@ -64,12 +63,8 @@ export default function CustomizableSection() {
 
       <div className="container mx-auto px-4 relative">
         <div className="text-center mb-16 opacity-0 animate-fade-up">
-          <span className="text-sm font-medium text-primary uppercase tracking-wider mb-4 block">
-            Make it your own
-          </span>
-          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-            Highly Customizable
-          </h2>
+          <span className="text-sm font-medium text-primary uppercase tracking-wider mb-4 block">Make it your own</span>
+          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Highly Customizable</h2>
           <p className="text-muted-foreground max-w-2xl mx-auto opacity-0 animate-fade-up delay-100">
             Personalize every aspect of the terminal to match your design. Try it below!
           </p>
@@ -83,13 +78,11 @@ export default function CustomizableSection() {
               fileStructure={vfs}
               windowChrome={chromeStyle}
               theme={currentThemeName ? [currentThemeName, themeOverrides] : themeOverrides}
-              style={{ height: "auto", minHeight: "200px", maxHeight: "400px" }}
+              style={{ height: 'auto', minHeight: '200px', maxHeight: '400px' }}
               demo={{
-                script: [
-                  "cat welcome.md",
-                ],
-                behavior: "interactive",
-                mode: "run",
+                script: ['cat welcome.md'],
+                behavior: 'interactive',
+                mode: 'run',
                 defaultCharDelayMs: 100,
                 defaultAfterLineDelayMs: 3000,
               }}
@@ -109,10 +102,11 @@ export default function CustomizableSection() {
                   <button
                     key={index}
                     onClick={() => setSelectedTheme(index)}
-                    className={`px-3 py-2 rounded-md text-sm font-medium transition-all ${selectedTheme === index
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
-                      }`}
+                    className={`px-3 py-2 rounded-md text-sm font-medium transition-all ${
+                      selectedTheme === index
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+                    }`}
                   >
                     {theme.name}
                   </button>
@@ -131,10 +125,11 @@ export default function CustomizableSection() {
                   <button
                     key={style}
                     onClick={() => setChromeStyle(style)}
-                    className={`px-3 py-2 rounded-md text-sm font-medium transition-all ${chromeStyle === style
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
-                      }`}
+                    className={`px-3 py-2 rounded-md text-sm font-medium transition-all ${
+                      chromeStyle === style
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+                    }`}
                   >
                     {style}
                   </button>
@@ -153,10 +148,11 @@ export default function CustomizableSection() {
                   <button
                     key={cs.id}
                     onClick={() => setCursorShape(cs.id)}
-                    className={`px-3 py-2 rounded-md text-sm font-medium transition-all flex flex-col items-center gap-1 ${cursorShape === cs.id
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
-                      }`}
+                    className={`px-3 py-2 rounded-md text-sm font-medium transition-all flex flex-col items-center gap-1 ${
+                      cursorShape === cs.id
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'
+                    }`}
                   >
                     <span className="font-mono text-lg">{cs.symbol}</span>
                     <span className="text-xs">{cs.name}</span>

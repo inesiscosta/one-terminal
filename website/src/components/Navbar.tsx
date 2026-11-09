@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { useTheme } from 'next-themes';
 import { Sun, Moon, Book, Github } from 'lucide-react';
@@ -80,14 +80,16 @@ export default function Navbar() {
               aria-label="Toggle theme"
             >
               <div className="relative w-4 h-4">
-                <Sun className={`w-4 h-4 absolute inset-0 transition-all duration-500 ${theme === 'dark'
-                  ? 'rotate-0 opacity-100'
-                  : 'rotate-90 opacity-0'
-                  }`} />
-                <Moon className={`w-4 h-4 absolute inset-0 transition-all duration-500 ${theme === 'dark'
-                  ? '-rotate-90 opacity-0'
-                  : 'rotate-0 opacity-100'
-                  }`} />
+                <Sun
+                  className={`w-4 h-4 absolute inset-0 transition-all duration-500 ${
+                    theme === 'dark' ? 'rotate-0 opacity-100' : 'rotate-90 opacity-0'
+                  }`}
+                />
+                <Moon
+                  className={`w-4 h-4 absolute inset-0 transition-all duration-500 ${
+                    theme === 'dark' ? '-rotate-90 opacity-0' : 'rotate-0 opacity-100'
+                  }`}
+                />
               </div>
             </button>
           )}

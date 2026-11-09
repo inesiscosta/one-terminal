@@ -39,9 +39,7 @@ export default function FeaturesSection() {
       <div className="absolute inset-0 bg-gradient-to-b from-background via-muted/30 to-background" />
       <div className="container mx-auto px-4 relative">
         <div className="text-center mb-16 opacity-0 animate-fade-up">
-          <span className="text-sm font-medium text-primary uppercase tracking-wider mb-4 block">
-            Features
-          </span>
+          <span className="text-sm font-medium text-primary uppercase tracking-wider mb-4 block">Features</span>
           <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4 opacity-0 animate-fade-up">
             Everything You Need
           </h2>

@@ -9,6 +9,7 @@ npm install one-terminal
 ```
 
 Define your virtual file system and add <Terminal> it to the page where you want your terminal to be rendered.
+
 ```jsx
 import { Terminal } from "one-terminal";
 
@@ -31,4 +32,5 @@ export default function App() {
 ```
 
 ## Documentation
+
 Find the full API reference in the [documentation](https://www.one-terminal.inesiscosta.com/docs).

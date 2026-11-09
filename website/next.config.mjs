@@ -1,5 +1,5 @@
-import nextra from "nextra";
-import path from "path";
+import nextra from 'nextra';
+import path from 'path';
 
 const withNextra = nextra({
   latex: true,
@@ -15,7 +15,7 @@ const nextConfig = withNextra({
     resolveAlias: {
       'next-mdx-import-source-file': './src/mdx-components.ts',
     },
-  }
+  },
 });
 
 export default nextConfig;

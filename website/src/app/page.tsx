@@ -1,17 +1,19 @@
-import Hero from "@/components/sections/Hero";
-import Features from "@/components/sections/Features";
-import Commands from "@/components/sections/Commands";
-import Cutomizable from "@/components/sections/CustomizableSection";
-import License from "@/components/sections/OpenSource";
-import QuickStart from "@/components/sections/QuickStart";
+import Hero from '@/components/sections/Hero';
+import Features from '@/components/sections/Features';
+import Commands from '@/components/sections/Commands';
+import Cutomizable from '@/components/sections/CustomizableSection';
+import License from '@/components/sections/OpenSource';
+import QuickStart from '@/components/sections/QuickStart';
 
 export default async function Home() {
-  let version = "1.0.0";
+  let version = '1.0.0';
   try {
-    const data = await fetch("https://registry.npmjs.org/-/package/one-terminal/dist-tags", { next: { revalidate: 3600 } }).then(res => res.json());
+    const data = await fetch('https://registry.npmjs.org/-/package/one-terminal/dist-tags', {
+      next: { revalidate: 3600 },
+    }).then((res) => res.json());
     version = data.latest;
   } catch (e) {
-    console.error("Failed to fetch version", e);
+    console.error('Failed to fetch version', e);
   }
 
   return (
@@ -27,7 +29,7 @@ export default async function Home() {
       <footer className="py-8 border-t border-border">
         <div className="container mx-auto text-center">
           <p className="text-muted-foreground">
-            Built with ❤️ by{" "}
+            Built with ❤️ by{' '}
             <a
               href="https://github.com/inesiscosta"
               target="_blank"

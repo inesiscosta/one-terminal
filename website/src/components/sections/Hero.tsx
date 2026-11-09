@@ -1,11 +1,11 @@
-"use client";
+'use client';
 import { useTheme } from 'next-themes';
 import { useEffect, useState } from 'react';
-import { Terminal, TerminalTheme, DirectoryNode } from 'one-terminal'
+import { Terminal, TerminalTheme, DirectoryNode } from 'one-terminal';
 import { ArrowRight, Sparkles, Package } from 'lucide-react';
 import { Button } from '@/components/Button';
 
-export default function HeroSection({ version = "1.0.0" }: { version?: string }) {
+export default function HeroSection({ version = '1.0.0' }: { version?: string }) {
   const { resolvedTheme } = useTheme();
   const [terminalTheme, setTerminalTheme] = useState<'dracula' | 'light'>('dracula');
 
@@ -14,119 +14,111 @@ export default function HeroSection({ version = "1.0.0" }: { version?: string })
   }, [resolvedTheme]);
 
   const vfs: DirectoryNode = {
-    kind: "directory",
+    kind: 'directory',
     entries: {
       home: {
-        kind: "directory",
+        kind: 'directory',
         entries: {
           demo: {
-            kind: "directory",
+            kind: 'directory',
             entries: {
               Documents: {
-                kind: "directory",
+                kind: 'directory',
                 entries: {
-                  "notes.txt": {
-                    kind: "file",
-                    fileType: "text",
+                  'notes.txt': {
+                    kind: 'file',
+                    fileType: 'text',
                     content: [
-                      "# Personal notes",
-                      "",
-                      "- This is a demo file system for one-terminal.",
-                      "- Try running commands like:",
-                      "  - ls",
-                      "  - cd Documents",
-                      "  - cat notes.txt",
-                    ].join("\n"),
+                      '# Personal notes',
+                      '',
+                      '- This is a demo file system for one-terminal.',
+                      '- Try running commands like:',
+                      '  - ls',
+                      '  - cd Documents',
+                      '  - cat notes.txt',
+                    ].join('\n'),
                   },
-                  "todo.txt": {
-                    kind: "file",
-                    fileType: "text",
-                    content: [
-                      "# TODO",
-                      "",
-                      "- Polish terminal demo",
-                      "- Add more commands",
-                      "- Ship v1.0.0 🚀",
-                    ].join("\n"),
+                  'todo.txt': {
+                    kind: 'file',
+                    fileType: 'text',
+                    content: ['# TODO', '', '- Polish terminal demo', '- Add more commands', '- Ship v1.0.0 🚀'].join(
+                      '\n',
+                    ),
                   },
                 },
               },
               Downloads: {
-                kind: "directory",
+                kind: 'directory',
                 entries: {
-                  "one-terminal-demo.zip": {
-                    kind: "file",
-                    fileType: "text",
-                    content:
-                      "Binary content omitted. Imagine this is a downloaded archive.",
+                  'one-terminal-demo.zip': {
+                    kind: 'file',
+                    fileType: 'text',
+                    content: 'Binary content omitted. Imagine this is a downloaded archive.',
                   },
                 },
               },
               Projects: {
-                kind: "directory",
+                kind: 'directory',
                 entries: {
-                  "one-terminal": {
-                    kind: "directory",
+                  'one-terminal': {
+                    kind: 'directory',
                     entries: {
-                      "README.md": {
-                        kind: "file",
-                        fileType: "text",
+                      'README.md': {
+                        kind: 'file',
+                        fileType: 'text',
                         content: [
-                          "# one-terminal",
-                          "",
-                          "A highly customizable fake terminal component for the web.",
-                          "",
-                          "## Quick start",
-                          "",
-                          "npm install one-terminal",
-                          "",
-                          "Then import it into your React app and pass this VFS as the fileStructure.",
-                        ].join("\n"),
+                          '# one-terminal',
+                          '',
+                          'A highly customizable fake terminal component for the web.',
+                          '',
+                          '## Quick start',
+                          '',
+                          'npm install one-terminal',
+                          '',
+                          'Then import it into your React app and pass this VFS as the fileStructure.',
+                        ].join('\n'),
                       },
-                      "demo.tsx": {
-                        kind: "file",
-                        fileType: "text",
+                      'demo.tsx': {
+                        kind: 'file',
+                        fileType: 'text',
                         content: [
-                          "// Demo entrypoint for one-terminal",
-                          "import { Terminal } from \"one-terminal\";",
-                          "",
-                          "// This is just a placeholder file in the virtual FS.",
-                        ].join("\n"),
+                          '// Demo entrypoint for one-terminal',
+                          'import { Terminal } from "one-terminal";',
+                          '',
+                          '// This is just a placeholder file in the virtual FS.',
+                        ].join('\n'),
                       },
                     },
                   },
                 },
               },
-              ".bashrc": {
-                kind: "file",
-                fileType: "text",
+              '.bashrc': {
+                kind: 'file',
+                fileType: 'text',
                 content: [
-                  "# ~/.bashrc (virtual)",
-                  "export EDITOR=nano",
+                  '# ~/.bashrc (virtual)',
+                  'export EDITOR=nano',
                   "alias ll='ls -alF'",
                   "alias gs='git status'",
-                ].join("\n"),
+                ].join('\n'),
               },
-              ".profile": {
-                kind: "file",
-                fileType: "text",
-                content: [
-                  "# ~/.profile (virtual)",
-                  "PATH=\"$HOME/.local/bin:$PATH\"",
-                ].join("\n"),
+              '.profile': {
+                kind: 'file',
+                fileType: 'text',
+                content: ['# ~/.profile (virtual)', 'PATH="$HOME/.local/bin:$PATH"'].join('\n'),
               },
-              "README.txt": {
-                kind: "file",
-                fileType: "text",
+              'README.txt': {
+                kind: 'file',
+                fileType: 'text',
                 content: [
-                  "Welcome to the one-terminal demo!",
-                  "",
-                  "Try exploring:",
-                  "- /home/demo/Documents",
-                  "- /home/demo/Projects",
-                  "- /etc",
-                  "- /var/log",
-                ].join("\n"),
+                  'Welcome to the one-terminal demo!',
+                  '',
+                  'Try exploring:',
+                  '- /home/demo/Documents',
+                  '- /home/demo/Projects',
+                  '- /etc',
+                  '- /var/log',
+                ].join('\n'),
               },
             },
           },
@@ -134,50 +126,44 @@ export default function HeroSection({ version = "1.0.0" }: { version?: string })
       },
 
       etc: {
-        kind: "directory",
+        kind: 'directory',
         entries: {
-          "motd": {
-            kind: "file",
-            fileType: "text",
-            content: [
-              "Welcome to one-terminal!",
-              "This is a virtual Linux-like environment for demos.",
-            ].join("\n"),
+          motd: {
+            kind: 'file',
+            fileType: 'text',
+            content: ['Welcome to one-terminal!', 'This is a virtual Linux-like environment for demos.'].join('\n'),
           },
-          "hosts": {
-            kind: "file",
-            fileType: "text",
-            content: [
-              "127.0.0.1   localhost",
-              "127.0.1.1   one-terminal-dev",
-            ].join("\n"),
+          hosts: {
+            kind: 'file',
+            fileType: 'text',
+            content: ['127.0.0.1   localhost', '127.0.1.1   one-terminal-dev'].join('\n'),
           },
-          "one-terminal.conf": {
-            kind: "file",
-            fileType: "text",
+          'one-terminal.conf': {
+            kind: 'file',
+            fileType: 'text',
             content: [
-              "# one-terminal configuration (virtual)",
-              "theme = dracula",
-              "prompt = demo@one-terminal:~$",
-            ].join("\n"),
+              '# one-terminal configuration (virtual)',
+              'theme = dracula',
+              'prompt = demo@one-terminal:~$',
+            ].join('\n'),
           },
         },
       },
 
       opt: {
-        kind: "directory",
+        kind: 'directory',
         entries: {
-          "one-terminal": {
-            kind: "directory",
+          'one-terminal': {
+            kind: 'directory',
             entries: {
-              "config.json": {
-                kind: "file",
-                fileType: "text",
+              'config.json': {
+                kind: 'file',
+                fileType: 'text',
                 content: JSON.stringify(
                   {
-                    theme: "dracula",
+                    theme: 'dracula',
                     demoMode: true,
-                    version: "0.1.0",
+                    version: '0.1.0',
                   },
                   null,
                   2,
@@ -189,29 +175,28 @@ export default function HeroSection({ version = "1.0.0" }: { version?: string })
       },
 
       usr: {
-        kind: "directory",
+        kind: 'directory',
         entries: {
           bin: {
-            kind: "directory",
+            kind: 'directory',
             entries: {
-              "one-terminal-demo": {
-                kind: "file",
-                fileType: "text",
-                content:
-                  "#!/usr/bin/env node\n// Imagine this runs the one-terminal CLI demo.",
+              'one-terminal-demo': {
+                kind: 'file',
+                fileType: 'text',
+                content: '#!/usr/bin/env node\n// Imagine this runs the one-terminal CLI demo.',
               },
             },
           },
           share: {
-            kind: "directory",
+            kind: 'directory',
             entries: {
-              "one-terminal": {
-                kind: "directory",
+              'one-terminal': {
+                kind: 'directory',
                 entries: {
-                  "LICENSE.txt": {
-                    kind: "file",
-                    fileType: "text",
-                    content: "MIT License (virtual placeholder).",
+                  'LICENSE.txt': {
+                    kind: 'file',
+                    fileType: 'text',
+                    content: 'MIT License (virtual placeholder).',
                   },
                 },
               },
@@ -221,26 +206,23 @@ export default function HeroSection({ version = "1.0.0" }: { version?: string })
       },
 
       var: {
-        kind: "directory",
+        kind: 'directory',
         entries: {
           log: {
-            kind: "directory",
+            kind: 'directory',
             entries: {
-              "syslog": {
-                kind: "file",
-                fileType: "text",
+              syslog: {
+                kind: 'file',
+                fileType: 'text',
                 content: [
-                  "Dec 10 12:00:00 one-terminal demo[1234]: boot complete",
+                  'Dec 10 12:00:00 one-terminal demo[1234]: boot complete',
                   "Dec 10 12:00:01 one-terminal demo[1234]: user 'demo' logged in",
-                ].join("\n"),
+                ].join('\n'),
               },
-              "one-terminal.log": {
-                kind: "file",
-                fileType: "text",
-                content: [
-                  "[info] Initialized virtual filesystem",
-                  "[info] Ready for commands",
-                ].join("\n"),
+              'one-terminal.log': {
+                kind: 'file',
+                fileType: 'text',
+                content: ['[info] Initialized virtual filesystem', '[info] Ready for commands'].join('\n'),
               },
             },
           },
@@ -248,40 +230,39 @@ export default function HeroSection({ version = "1.0.0" }: { version?: string })
       },
 
       tmp: {
-        kind: "directory",
+        kind: 'directory',
         entries: {
-          ".keep": {
-            kind: "file",
-            fileType: "text",
-            content: "Temporary files live here.",
+          '.keep': {
+            kind: 'file',
+            fileType: 'text',
+            content: 'Temporary files live here.',
           },
         },
       },
 
-      "README-root.txt": {
-        kind: "file",
-        fileType: "text",
+      'README-root.txt': {
+        kind: 'file',
+        fileType: 'text',
         content: [
-          "You are at the root of the virtual file system.",
-          "",
-          "Common places to explore:",
-          "- /home/demo",
-          "- /etc",
-          "- /usr",
-          "- /var/log",
-        ].join("\n"),
+          'You are at the root of the virtual file system.',
+          '',
+          'Common places to explore:',
+          '- /home/demo',
+          '- /etc',
+          '- /usr',
+          '- /var/log',
+        ].join('\n'),
       },
 
-      "one-terminal-github.link": {
-        kind: "file",
-        fileType: "link",
-        href: "https://github.com/inesiscosta/one-terminal",
-        label: "one-terminal on GitHub",
-        target: "_blank",
+      'one-terminal-github.link': {
+        kind: 'file',
+        fileType: 'link',
+        href: 'https://github.com/inesiscosta/one-terminal',
+        label: 'one-terminal on GitHub',
+        target: '_blank',
       },
     },
   };
-
 
   return (
     <section className="relative pt-32 pb-20 overflow-hidden">
@@ -299,15 +280,14 @@ export default function HeroSection({ version = "1.0.0" }: { version?: string })
             </div>
 
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground leading-tight mb-6 opacity-0 animate-fade-up delay-100">
-              A Fun{' '}
-              <span className="text-gradient glow-text">Terminal</span>
+              A Fun <span className="text-gradient glow-text">Terminal</span>
               <br />
               For Your Website
             </h1>
 
             <p className="text-lg text-muted-foreground max-w-lg mx-auto lg:mx-0 mb-8 opacity-0 animate-fade-up delay-200">
-              Add an interactive terminal easter egg to your portfolio or website.
-              Fully customizable themes, commands, and behaviors.
+              Add an interactive terminal easter egg to your portfolio or website. Fully customizable themes, commands,
+              and behaviors.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start opacity-0 animate-fade-up delay-300">
@@ -343,10 +323,25 @@ export default function HeroSection({ version = "1.0.0" }: { version?: string })
                   className="copy-button absolute right-2 opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded bg-background/80 backdrop-blur-sm border border-border hover:border-primary/50"
                   aria-label="Copy install command"
                 >
-                  <svg className="copy-icon w-4 h-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  <svg
+                    className="copy-icon w-4 h-4 text-muted-foreground"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+                    />
                   </svg>
-                  <svg className="check-icon w-4 h-4 text-terminal-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg
+                    className="check-icon w-4 h-4 text-terminal-green"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                 </button>
@@ -358,10 +353,7 @@ export default function HeroSection({ version = "1.0.0" }: { version?: string })
           <div className="relative opacity-0 animate-fade-up delay-200">
             <div className="absolute -inset-4 bg-gradient-to-r from-primary/20 via-accent/20 to-primary/20 rounded-2xl blur-2xl opacity-50" />
             <div className="relative w-full h-96">
-              <Terminal
-                fileStructure={vfs}
-                startPath="/home/demo"
-                theme={terminalTheme as Partial<TerminalTheme>} />
+              <Terminal fileStructure={vfs} startPath="/home/demo" theme={terminalTheme as Partial<TerminalTheme>} />
             </div>
           </div>
         </div>

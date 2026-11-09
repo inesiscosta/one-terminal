@@ -1,0 +1,12 @@
+dist
+coverage
+node_modules
+pnpm-lock.yaml
+CHANGELOG.md
+.release-please-manifest.json
+website/.next
+website/out
+website/public/_pagefind
+website/next-env.d.ts
+# Prettier's MDX support predates MDX 3 and can break Nextra pages
+*.mdx

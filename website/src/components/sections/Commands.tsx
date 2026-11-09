@@ -15,12 +15,8 @@ export default function CommandsSection() {
     <section id="commands" className="py-24 scroll-mt-30">
       <div className="container mx-auto px-4">
         <div className="text-center mb-12 opacity-0 animate-fade-up">
-          <span className="text-sm font-medium text-primary uppercase tracking-wider mb-4 block">
-            Out the box
-          </span>
-          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-            Built-in Commands
-          </h2>
+          <span className="text-sm font-medium text-primary uppercase tracking-wider mb-4 block">Out the box</span>
+          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Built-in Commands</h2>
           <p className="text-muted-foreground max-w-2xl mx-auto opacity-0 animate-fade-up delay-100">
             Everything you need for a realistic terminal experience, ready to use out of the box.
           </p>

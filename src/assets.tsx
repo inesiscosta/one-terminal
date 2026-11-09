@@ -1,4 +1,4 @@
-import React from "react";
+import React from 'react';
 
 export const MacCloseIcon: React.FC = () => (
   <svg viewBox="0 0 100 100" aria-hidden="true">
@@ -35,38 +35,14 @@ export const MacMaxIcon: React.FC = () => (
 
 export const WinCloseIcon: React.FC = () => (
   <svg width="10" height="10" viewBox="0 0 48 48" aria-hidden="true">
-    <line
-      x1="8.5"
-      y1="8.5"
-      x2="39.5"
-      y2="39.5"
-      stroke="currentColor"
-      strokeWidth="5"
-      strokeLinecap="round"
-    />
-    <line
-      x1="39.5"
-      y1="8.5"
-      x2="8.5"
-      y2="39.5"
-      stroke="currentColor"
-      strokeWidth="5"
-      strokeLinecap="round"
-    />
+    <line x1="8.5" y1="8.5" x2="39.5" y2="39.5" stroke="currentColor" strokeWidth="5" strokeLinecap="round" />
+    <line x1="39.5" y1="8.5" x2="8.5" y2="39.5" stroke="currentColor" strokeWidth="5" strokeLinecap="round" />
   </svg>
 );
 
 export const WinMinIcon: React.FC = () => (
   <svg width="10" height="10" viewBox="0 0 48 48" aria-hidden="true">
-    <line
-      x1="3.5"
-      y1="24"
-      x2="44.5"
-      y2="24"
-      stroke="currentColor"
-      strokeWidth="5"
-      strokeLinecap="round"
-    />
+    <line x1="3.5" y1="24" x2="44.5" y2="24" stroke="currentColor" strokeWidth="5" strokeLinecap="round" />
   </svg>
 );
 
@@ -85,24 +61,8 @@ export const WinMaxIcon: React.FC = () => (
 
 export const LinuxCloseIcon: React.FC = () => (
   <svg width="10" height="10" viewBox="0 0 48 48" aria-hidden="true">
-    <line
-      x1="8.5"
-      y1="8.5"
-      x2="39.5"
-      y2="39.5"
-      stroke="currentColor"
-      strokeWidth="5"
-      strokeLinecap="round"
-    />
-    <line
-      x1="39.5"
-      y1="8.5"
-      x2="8.5"
-      y2="39.5"
-      stroke="currentColor"
-      strokeWidth="5"
-      strokeLinecap="round"
-    />
+    <line x1="8.5" y1="8.5" x2="39.5" y2="39.5" stroke="currentColor" strokeWidth="5" strokeLinecap="round" />
+    <line x1="39.5" y1="8.5" x2="8.5" y2="39.5" stroke="currentColor" strokeWidth="5" strokeLinecap="round" />
   </svg>
 );
 
