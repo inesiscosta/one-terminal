@@ -4,7 +4,12 @@
     "target": "ESNEXT",
     "moduleResolution": "node",
     "esModuleInterop": true,
-    "lib": ["esnext", "dom"]
+    "lib": ["esnext", "dom"],
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "isolatedModules": true,
+    "noFallthroughCasesInSwitch": true
   },
   "include": ["src"]
 }
