@@ -2,25 +2,6 @@
   "name": "one-terminal",
   "version": "1.2.1",
   "description": "One \"fake\" terminal to rule them all! A React terminal component.",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.js"
-    }
-  },
-  "types": "./dist/index.d.ts",
-  "files": [
-    "dist"
-  ],
-  "scripts": {
-    "dev": "tsup --watch",
-    "build": "tsup",
-    "type-check": "tsc --noEmit",
-    "dev:website": "turbo dev --filter=website",
-    "build:website": "turbo build --filter=website",
-    "format": "prettier --write ."
-  },
   "keywords": [
     "react",
     "terminal",
@@ -29,7 +10,7 @@
     "headless",
     "fake"
   ],
-  "author": "In\u00eas Costa",
+  "author": "Inês Costa",
   "license": "MIT",
   "homepage": "https://one-terminal.inesiscosta.com/",
   "repository": {
@@ -39,23 +20,69 @@
   "bugs": {
     "url": "https://github.com/inesiscosta/one-terminal/issues"
   },
-  "devDependencies": {
-    "@types/node": "24.10.1",
-    "@types/react": "^19.2.7",
-    "@types/react-dom": "^19.2.3",
-    "prettier": "^3.7.4",
-    "react": "^19.2.3",
-    "react-dom": "^19.2.3",
-    "tsup": "^8.5.1",
-    "turbo": "2.6.1",
-    "typescript": "^5.9.3"
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "dev": "tsup --watch",
+    "build": "tsup",
+    "type-check": "tsc --noEmit",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "check": "pnpm type-check && pnpm lint && pnpm format:check && pnpm test && pnpm build",
+    "dev:website": "turbo dev --filter=website",
+    "build:website": "turbo build --filter=website",
+    "prepare": "husky",
+    "prepublishOnly": "pnpm type-check && pnpm test && pnpm build"
+  },
+  "lint-staged": {
+    "src/**/*.{ts,tsx}": [
+      "eslint --fix --max-warnings=0",
+      "prettier --write"
+    ],
+    "website/src/**/*.{ts,tsx}": [
+      "pnpm --dir website exec eslint --fix --max-warnings=0",
+      "prettier --write"
+    ],
+    "*.{js,mjs,cjs,json,md,mdx,yml,yaml,css}": "prettier --write"
   },
   "peerDependencies": {
     "react": ">=18",
     "react-dom": ">=18"
   },
-  "packageManager": "pnpm@9.15.9",
-  "main": "./dist/index.js",
-  "module": "./dist/index.mjs",
-  "sideEffects": false
+  "devDependencies": {
+    "@eslint/js": "^9.39.1",
+    "@types/node": "24.10.1",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
+    "eslint": "^9.39.1",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "globals": "^17.14.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.6.0",
+    "prettier": "^3.7.4",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
+    "tsup": "^8.5.1",
+    "turbo": "2.6.1",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.72.2",
+    "vitest": "^5.1.0"
+  },
+  "packageManager": "pnpm@9.15.9"
 }
