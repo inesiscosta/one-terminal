@@ -1,0 +1,4 @@
+# Lint and format the staged files, then make sure the library still type-checks and its tests pass
+pnpm exec lint-staged
+pnpm type-check
+pnpm test
