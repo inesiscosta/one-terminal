@@ -80,7 +80,9 @@ export const CHROME_STYLES: Record<Exclude<WindowChromeStyle, 'none'>, TerminalW
   mac: {
     style: 'mac',
     cornerRadius: 14,
-    titleBarText: 'Terminal',
+    titleBarText: '',
+    titleBarCwd: 'basename',
+    titleBarSeparator: ' — ',
     titleBarTextColor: 'rgba(212, 212, 212, 1)',
     buttonColors: {
       close: '#ff5f56',
@@ -92,7 +94,9 @@ export const CHROME_STYLES: Record<Exclude<WindowChromeStyle, 'none'>, TerminalW
   windows: {
     style: 'windows',
     cornerRadius: 7,
-    titleBarText: 'Terminal',
+    titleBarText: '',
+    titleBarCwd: 'basename',
+    titleBarSeparator: ' — ',
     titleBarTextColor: 'rgba(212, 212, 212, 1)',
     buttonColors: {
       close: '#ff0000ea',
@@ -104,7 +108,9 @@ export const CHROME_STYLES: Record<Exclude<WindowChromeStyle, 'none'>, TerminalW
   linux: {
     style: 'linux',
     cornerRadius: 8,
-    titleBarText: 'Terminal',
+    titleBarText: '',
+    titleBarCwd: 'basename',
+    titleBarSeparator: ' — ',
     titleBarTextColor: 'rgba(212, 212, 212, 1)',
     buttonColors: {
       close: '#ececec52',
