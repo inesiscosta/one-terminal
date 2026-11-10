@@ -1,4 +1,18 @@
-import { Terminal, Folder, FileText, MapPin, MessageSquare, Trash2, HelpCircle, ChevronRight } from 'lucide-react';
+import {
+  Folder,
+  FileText,
+  MapPin,
+  MessageSquare,
+  Trash2,
+  HelpCircle,
+  ChevronRight,
+  FolderTree,
+  User,
+  History,
+  Timer,
+  Search,
+  Monitor,
+} from 'lucide-react';
 
 const commands = [
   { name: 'help', description: 'Display available commands', icon: HelpCircle, color: 'text-terminal-cyan' },
@@ -6,7 +20,13 @@ const commands = [
   { name: 'ls', description: 'List directory contents', icon: Folder, color: 'text-terminal-yellow' },
   { name: 'cat', description: 'Display file contents', icon: FileText, color: 'text-terminal-purple' },
   { name: 'pwd', description: 'Print working directory', icon: MapPin, color: 'text-terminal-cyan' },
+  { name: 'grep', description: 'Search text, with pipes', icon: Search, color: 'text-terminal-red' },
+  { name: 'neofetch', description: 'Show off your info', icon: Monitor, color: 'text-terminal-cyan' },
   { name: 'echo', description: 'Output text to terminal', icon: MessageSquare, color: 'text-terminal-green' },
+  { name: 'tree', description: 'Show directory structure', icon: FolderTree, color: 'text-terminal-yellow' },
+  { name: 'whoami', description: 'Print the current user', icon: User, color: 'text-terminal-purple' },
+  { name: 'history', description: 'Show and re-run past commands', icon: History, color: 'text-terminal-cyan' },
+  { name: 'sleep', description: 'Wait, then Ctrl+C to stop', icon: Timer, color: 'text-terminal-green' },
   { name: 'clear', description: 'Clear terminal screen', icon: Trash2, color: 'text-terminal-red' },
 ];
 
