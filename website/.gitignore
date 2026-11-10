@@ -26,3 +26,5 @@ yarn-error.log*
 
 # typescript
 *.tsbuildinfo
+# pagefind search index (generated on build)
+/public/_pagefind

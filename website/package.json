@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next build --turbopack",
+    "build": "next build --turbopack && node scripts/pagefind.mjs",
     "start": "next start",
     "lint": "eslint ."
   },
