@@ -1,5 +1,4 @@
 import nextra from 'nextra';
-import path from 'path';
 
 const withNextra = nextra({
   latex: true,
