@@ -2,17 +2,20 @@
 
 import { useTheme } from 'next-themes';
 import { Sun, Moon, Book, Github } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useSyncExternalStore } from 'react';
 import { usePathname } from 'next/navigation';
+
+const subscribeNoop = () => () => {};
 
 export default function Navbar() {
   const { theme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
+  // true on the client, false during SSR (the theme is only known in the browser)
+  const mounted = useSyncExternalStore(
+    subscribeNoop,
+    () => true,
+    () => false,
+  );
   const pathname = usePathname();
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   if (pathname?.startsWith('/docs')) {
     return null;
