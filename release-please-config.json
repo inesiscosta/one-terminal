@@ -1,0 +1,13 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "bootstrap-sha": "1856c760a49607dd760e4f6865c244ab76bf42ad",
+  "packages": {
+    ".": {
+      "release-type": "node",
+      "package-name": "one-terminal",
+      "changelog-path": "CHANGELOG.md",
+      "include-component-in-tag": false,
+      "exclude-paths": ["website"]
+    }
+  }
+}
