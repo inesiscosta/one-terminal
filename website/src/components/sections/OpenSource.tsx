@@ -1,19 +1,10 @@
 'use client';
-import { useEffect, useState } from 'react';
-import { useTheme } from 'next-themes';
 import { Github } from 'lucide-react';
-import { Terminal } from 'one-terminal';
+import { Terminal, type BuiltInTheme, type TerminalTheme } from 'one-terminal';
 import { Button } from '@/components/Button';
 
 export default function FreeSection() {
-  const { resolvedTheme } = useTheme();
-  const [baseTheme, setBaseTheme] = useState<string>('dracula');
-
-  useEffect(() => {
-    setBaseTheme(resolvedTheme === 'light' ? 'light' : 'dracula');
-  }, [resolvedTheme]);
-
-  const themeConfig: any = [baseTheme, { cursor: { shape: 'underline' } }];
+  const themeConfig: [BuiltInTheme, Partial<TerminalTheme>] = ['dracula', { cursor: { shape: 'underline' } }];
 
   const vfs = {
     kind: 'directory' as const,

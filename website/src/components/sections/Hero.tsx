@@ -1,18 +1,9 @@
 'use client';
-import { useTheme } from 'next-themes';
-import { useEffect, useState } from 'react';
-import { Terminal, TerminalTheme, DirectoryNode } from 'one-terminal';
+import { Terminal, DirectoryNode } from 'one-terminal';
 import { ArrowRight, Sparkles, Package } from 'lucide-react';
 import { Button } from '@/components/Button';
 
 export default function HeroSection({ version = '1.0.0' }: { version?: string }) {
-  const { resolvedTheme } = useTheme();
-  const [terminalTheme, setTerminalTheme] = useState<'dracula' | 'light'>('dracula');
-
-  useEffect(() => {
-    setTerminalTheme(resolvedTheme === 'light' ? 'light' : 'dracula');
-  }, [resolvedTheme]);
-
   const vfs: DirectoryNode = {
     kind: 'directory',
     entries: {
@@ -353,7 +344,7 @@ export default function HeroSection({ version = '1.0.0' }: { version?: string })
           <div className="relative opacity-0 animate-fade-up delay-200">
             <div className="absolute -inset-4 bg-gradient-to-r from-primary/20 via-accent/20 to-primary/20 rounded-2xl blur-2xl opacity-50" />
             <div className="relative w-full h-96">
-              <Terminal fileStructure={vfs} startPath="/home/demo" theme={terminalTheme as Partial<TerminalTheme>} />
+              <Terminal fileStructure={vfs} startPath="/home/demo" theme="dracula" />
             </div>
           </div>
         </div>

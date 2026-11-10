@@ -1,10 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Terminal, WindowChromeStyle, CursorShape } from 'one-terminal';
+import { useState } from 'react';
+import { Terminal, type WindowChromeStyle, type CursorShape, type TerminalTheme } from 'one-terminal';
 import { Palette, Monitor, Type } from 'lucide-react';
-
-import { useTheme } from 'next-themes';
 
 const themes = [
   { name: 'Dracula', value: 'dracula' as const },
@@ -20,22 +18,10 @@ const cursorStyles: { id: CursorShape; name: string; symbol: string }[] = [
 ];
 
 export default function CustomizableSection() {
-  const { resolvedTheme } = useTheme();
   const [chromeStyle, setChromeStyle] = useState<WindowChromeStyle>('windows');
   const [cursorShape, setCursorShape] = useState<CursorShape>('beam');
+  // Terminals stay dark (Dracula) regardless of the site theme until the user picks another one
   const [selectedTheme, setSelectedTheme] = useState(0);
-
-  // Sync with site theme on mount/change
-  useEffect(() => {
-    if (resolvedTheme === 'light') {
-      // Find index of Light
-      const lightIndex = themes.findIndex((t) => t.value === 'light');
-      if (lightIndex !== -1) setSelectedTheme(lightIndex);
-    } else {
-      // Default to Dracula (index 0) for dark mode
-      setSelectedTheme(0);
-    }
-  }, [resolvedTheme]);
 
   const vfs = {
     kind: 'directory' as const,
@@ -50,7 +36,7 @@ export default function CustomizableSection() {
   };
 
   const currentThemeName = themes[selectedTheme].value;
-  const themeOverrides: any = {
+  const themeOverrides: Partial<TerminalTheme> = {
     cursor: {
       shape: cursorShape,
       blink: true,
