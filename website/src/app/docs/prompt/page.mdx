@@ -1,0 +1,86 @@
+import { Callout } from 'nextra/components'
+
+# Prompt & Title Bar
+
+## Prompt
+
+The `prompt` prop is a template. The default is `{user}@{cwd}:$ `, which looks like `guest@projects:$ `.
+
+```tsx
+<Terminal prompt="{user}@{host}:{path}$ " />   // ines@portfolio:~/projects$
+<Terminal prompt="❯ " />                       // ❯
+<Terminal prompt="[{cwd}] → " />               // [projects] →
+```
+
+### Placeholders
+
+| Placeholder | Value | Example |
+| :--- | :--- | :--- |
+| `{cwd}` | The current folder's name, `~` at the root | `projects` |
+| `{path}` | The full current path, starting at `~` | `~/projects/web` |
+| `{user}` | The `username` prop | `guest` |
+| `{host}` | The `hostname` prop | `one-terminal` |
+
+The prompt updates as you `cd` around. Each line in the scrollback keeps the prompt it was typed at, like a real
+terminal.
+
+<Callout type="info">
+  End the prompt with a space (`"$ "`) so typed text doesn't touch it.
+</Callout>
+
+## Username and hostname
+
+```tsx
+<Terminal username="ines" hostname="portfolio" />
+```
+
+- `username` (default `guest`) is used by `whoami`, `{user}`, `ls -l` and `neofetch`.
+- `hostname` (default `one-terminal`) is used by `{host}` and `neofetch`.
+
+## Welcome message
+
+`welcomeMessage` is shown above the first prompt. `clear` and `Ctrl+L` remove it.
+
+```tsx
+<Terminal welcomeMessage={"Welcome to my site!\nType 'help' to see what you can do."} />
+```
+
+It's a string, and `\n` starts a new line.
+
+## Title bar
+
+Like real terminals on macOS and Linux, the title follows the current directory. With no `titleBarText`, the
+title is just the folder name (`~` at the root).
+
+### Custom text plus the directory
+
+When you set `titleBarText`, the directory is added after it:
+
+```tsx
+<Terminal windowChrome={['mac', { titleBarText: 'My Terminal' }]} />
+// My Terminal — projects
+```
+
+`titleBarCwd` controls what gets added, and `titleBarSeparator` (default `" — "`) what goes in between:
+
+| `titleBarCwd` | Title |
+| :--- | :--- |
+| `"basename"` (default) | `My Terminal — projects` |
+| `"full"` | `My Terminal — ~/work/projects` |
+| `"none"` | `My Terminal` |
+
+```tsx
+<Terminal windowChrome={['linux', { titleBarText: 'portfolio', titleBarSeparator: ': ', titleBarCwd: 'full' }]} />
+// portfolio: ~/work/projects
+```
+
+### Full control with placeholders
+
+If `titleBarText` contains a placeholder, nothing is added automatically. You decide exactly where things go:
+
+```tsx
+<Terminal windowChrome={['linux', { titleBarText: '{user}@{host}: {path}' }]} />
+// ines@portfolio: ~/work/projects
+```
+
+The title bar supports the same placeholders as the prompt.
