@@ -1,0 +1,87 @@
+import { Callout } from 'nextra/components'
+
+# Demo Mode
+
+Demo mode types commands by itself: great for a hero section that shows off what your terminal can do before
+anyone touches it.
+
+```tsx
+<Terminal
+  fileStructure={files}
+  demo={{
+    script: ['ls', 'cat about.txt', 'cd projects', 'tree'],
+    behavior: 'interactive',
+  }}
+/>
+```
+
+Each line is typed character by character, run, and followed by a pause.
+
+## Options
+
+| Option | Type | Default | Description |
+| :--- | :--- | :--- | :--- |
+| `script` | `(string \| step)[]` | **Required** | The lines to type, in order |
+| `mode` | `"run" \| "type-writer"` | `"run"` | Run each line, or type and delete it without running |
+| `behavior` | `"freeze" \| "interactive" \| "loop"` | `"freeze"` | What happens when the script ends |
+| `defaultCharDelayMs` | `number` | `40` | Delay between typed characters |
+| `defaultAfterLineDelayMs` | `number` | `600` | Pause after each line |
+| `loopDelayMs` | `number` | `800` | Pause before starting again (with `loop`) |
+
+### When the script ends
+
+| `behavior` | Result |
+| :--- | :--- |
+| `freeze` | The terminal stays as it is and can't be typed in |
+| `interactive` | The visitor takes over |
+| `loop` | The screen clears and the script starts again |
+
+Input is disabled while the script is running.
+
+## Per-line timing
+
+Use an object instead of a string to change the timing of one line:
+
+```tsx
+demo={{
+  script: [
+    'whoami',
+    { line: 'cat a-very-long-file.txt', charDelayMs: 15 },
+    { line: 'echo "Read that?"', afterLineDelayMs: 2000 },
+  ],
+}}
+```
+
+| Step option | Description |
+| :--- | :--- |
+| `line` | The text to type |
+| `charDelayMs` | Overrides `defaultCharDelayMs` for this line |
+| `afterLineDelayMs` | Overrides `defaultAfterLineDelayMs` for this line |
+
+## Type-writer mode
+
+`mode: "type-writer"` types each line, waits, then deletes it, without running anything. Use it for rotating
+taglines:
+
+```tsx
+<Terminal
+  windowChrome="none"
+  prompt="> "
+  demo={{
+    mode: 'type-writer',
+    behavior: 'loop',
+    script: ['I build web apps.', 'I love open source.', 'I write Rust for fun.'],
+    defaultAfterLineDelayMs: 1500,
+  }}
+/>
+```
+
+<Callout type="info">
+  Demo lines are real commands: anything that works when typed (pipes, your extra commands, `cd`) works in a
+  script. The prompt follows along as the script changes directory.
+</Callout>
+
+<Callout type="warning">
+  The demo restarts when `demo.script` changes identity. Define the script outside your component or memoize it,
+  so a re-render doesn't restart it.
+</Callout>
