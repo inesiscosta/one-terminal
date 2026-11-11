@@ -1,0 +1,81 @@
+import { Callout } from 'nextra/components'
+
+# FAQ & Troubleshooting
+
+## The terminal is invisible or only one line tall
+
+The terminal fills its container, so the container needs a height:
+
+```tsx
+<div style={{ height: 400 }}>
+  <Terminal />
+</div>
+```
+
+You can also pass it directly: `<Terminal style={{ height: 400 }} />`.
+
+## "useState only works in Client Components" (Next.js)
+
+The package is marked `"use client"`, so this shouldn't happen. If you see it on an older version, import the
+terminal from a file that starts with `'use client'`, or load it with `next/dynamic` and `ssr: false`.
+
+## Some keyboard shortcuts don't work
+
+Browsers keep a few shortcuts for themselves. On Windows and Linux, `Ctrl+W`, `Ctrl+N` and `Ctrl+T` close the tab
+or open new ones before the page sees them. On macOS everything works. See
+[Keyboard Shortcuts](/docs/keyboard-shortcuts).
+
+## Columns don't line up
+
+`help`, `ls -l`, `tree` and `wc` align text with spaces, which needs a monospace font. Make sure your
+`fontFamily` is monospaced and actually loaded. The built-in themes ask for "JetBrainsMono Nerd Font" and fall
+back to `ui-monospace, monospace`.
+
+## The demo restarts on every render
+
+The demo restarts when the `demo.script` array changes identity. Move the `demo` object outside your component,
+or wrap it in `useMemo`.
+
+## Can visitors create or delete files?
+
+Not out of the box: there are no built-in `mv`, `rm`, `mkdir` or `touch` commands.
+[Open an issue](https://github.com/inesiscosta/one-terminal/issues) if you'd like them built in. You can also add
+them yourself with custom commands. See [Editable files](/docs/extra-commands#editable-files) for a ready-made
+`mkdir`, `touch`, `rm` and `mv`.
+
+Either way, they only change the fake file system in memory. Nothing touches the visitor's real disk, and every
+reload starts fresh with your original files (and an empty history).
+
+## Does `~` mean my home folder?
+
+`~` is the root of `fileStructure`. `cd`, `cd ~` and `cd /` all go to the same place. The prompt and title show
+it as `~`.
+
+## Are wildcards (`*.md`), `&&`, `;` or `>` supported?
+
+Not yet, but feel free to open a PR! Pipes (`|`), quotes, escapes and history expansion are supported. To search
+many files, use `grep -r`.
+
+## Can a custom command be async?
+
+`run` must return its output synchronously. You can still kick off async work (like `fetch` or `window.open`) and
+return a message right away.
+
+## How do I hide a command from `help`?
+
+Set `hidden: true` on it. It still runs when typed, which makes it handy for
+[easter eggs](/docs/extra-commands#easter-eggs).
+
+## How do I change what `help` prints?
+
+Give your commands a `description` and `usage`, or replace `help` with your own. See
+[Help](/docs/extra-commands#help).
+
+## Does it work on phones?
+
+Yes. Typing goes into a real (visually hidden) `<input>`, so tapping the terminal opens the on-screen keyboard.
+Output is plain text in the page, so it can be selected and copied.
+
+<Callout type="info">
+  Found a bug or missing feature? [Open an issue](https://github.com/inesiscosta/one-terminal/issues).
+</Callout>
