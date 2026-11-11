@@ -1,0 +1,134 @@
+import { Callout } from 'nextra/components'
+
+# File System
+
+Everything the terminal can see comes from the `fileStructure` prop: a tree of **directories** and **files**
+kept in memory. Nothing is read from or written to the visitor's machine.
+
+## Directories
+
+A directory has `kind: "directory"` and an `entries` object. Each key is a name and each value is another
+directory or a file.
+
+```tsx
+const fileStructure: DirectoryNode = {
+  kind: 'directory',
+  entries: {
+    projects: { kind: 'directory', entries: {} },
+    'notes.txt': { kind: 'file', fileType: 'text', content: 'Remember the milk' },
+  },
+};
+```
+
+The top-level object is the root (`/`). It also acts as the home directory, so `~` and `cd` with no arguments
+both take you there.
+
+## Text files
+
+Text files hold a `content` string. Use `\n` for line breaks. `cat`, `grep`, `head`, `tail`, `wc` and `nl` all
+work line by line.
+
+```tsx
+'skills.txt': {
+  kind: 'file',
+  fileType: 'text',
+  content: 'TypeScript\nRust\nGo',
+}
+```
+
+Template literals are handy for longer files:
+
+```tsx
+'about.md': {
+  kind: 'file',
+  fileType: 'text',
+  content: `# About me
+
+I build things for the web.
+Ask me about terminals.`,
+}
+```
+
+## Link files
+
+Link files point somewhere. `cat` renders them as a clickable link, and `ls -l` / `tree` show them as `name -> href`.
+
+```tsx
+'github.lnk': {
+  kind: 'file',
+  fileType: 'link',
+  href: 'https://github.com/inesiscosta',
+  label: 'github.com/inesiscosta', // optional text shown instead of the URL
+  target: '_blank',               // optional, "_blank" (default) or "_self"
+}
+```
+
+When piped (`cat github.lnk | grep com`), a link file's text is its `href`.
+
+## Hidden files
+
+Like on Unix, names starting with a dot are hidden. `ls`, `tree` and tab completion skip them unless asked:
+
+```bash
+ls -a        # show hidden entries plus . and ..
+ls -A        # show hidden entries
+tree -a      # include hidden entries in the tree
+cat .secret  # you can always read them by name
+```
+
+Hidden files are perfect for easter eggs.
+
+## Starting directory
+
+`startPath` picks where the session begins. It must point to a directory inside `fileStructure`:
+
+```tsx
+<Terminal fileStructure={fileStructure} startPath="/projects" />
+```
+
+## Paths
+
+All commands understand the usual path forms:
+
+| Form | Meaning |
+| :--- | :--- |
+| `/projects/a.md` | Absolute, from the root |
+| `projects/a.md`, `./a.md` | Relative to the current directory |
+| `..`, `../notes.txt` | The parent directory |
+| `~`, `~/projects` | The root (home) |
+| `"my file.txt"`, `my\ file.txt` | Names with spaces, quoted or escaped |
+
+<Callout type="info">
+  Names can contain spaces and any other characters. Tab completion quotes them for you.
+</Callout>
+
+## Building the tree from data
+
+Since it's a plain object, you can generate it. For example, from a list of blog posts:
+
+```tsx
+const posts = [
+  { slug: 'hello-world', body: 'My first post' },
+  { slug: 'terminals', body: 'Why I love terminals' },
+];
+
+const fileStructure: DirectoryNode = {
+  kind: 'directory',
+  entries: {
+    blog: {
+      kind: 'directory',
+      entries: Object.fromEntries(
+        posts.map((p) => [`${p.slug}.md`, { kind: 'file', fileType: 'text', content: p.body }]),
+      ),
+    },
+  },
+};
+```
+
+<Callout type="warning">
+  Keep the object stable between renders: define it outside the component or wrap it in `useMemo`. A new object
+  on every render works, but it makes React re-compute the terminal's state needlessly.
+</Callout>
+
+There are no built-in `rm`, `mv`, `mkdir` or `touch` commands, but you can add them as
+[custom commands](/docs/extra-commands#editable-files). Changes only live in memory and reset on reload.
