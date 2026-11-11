@@ -1,57 +1,213 @@
 # API Reference
 
-## Terminal Component
-
-The main component of the library.
-
 ```tsx
-import { Terminal } from "one-terminal";
+import { Terminal } from 'one-terminal';
+import type { DirectoryNode, ExtraCommands, TerminalTheme /* ... */ } from 'one-terminal';
 ```
 
-### Props
+The package exports the `Terminal` component and all of the types below.
+
+## `<Terminal />` props
+
+Every prop is optional.
 
 | Prop | Type | Default | Description |
 | :--- | :--- | :--- | :--- |
-| `fileStructure` | `DirectoryNode` | **Required** | The virtual file system structure. |
-| `startPath` | `string` | `"/"` | The initial working directory. |
-| `welcomeMessage` | `string` | `""` | Message shown at the top of the terminal session. |
-| `prompt` | `string` | `"guest@{cwd}:$ "` | Command prompt template. Use `{cwd}` for current directory. |
-| `windowChrome` | `WindowChromeStyle \| object` | `"mac"` | Window decoration style. |
-| `theme` | `BuiltInTheme \| object` | `"dracula"` | Color theme for the terminal. |
-| `extraCommands` | `ExtraCommands` | `undefined` | Custom commands to extend functionality. |
-| `demo` | `TerminalDemoConfig` | `undefined` | Configuration for automated demo sequences. |
+| `fileStructure` | [`DirectoryNode`](#directorynode) | Empty folder | The virtual file system. [Guide](/docs/file-system) |
+| `startPath` | `string` | `"/"` | Directory the session starts in |
+| `welcomeMessage` | `string` | `""` | Text above the first prompt. Removed by `clear`. |
+| `prompt` | `string` | `"{user}@{cwd}:$ "` | Prompt template. Supports `{cwd}`, `{path}`, `{user}`, `{host}`. [Guide](/docs/prompt) |
+| `username` | `string` | `"guest"` | Used by `whoami`, `{user}`, `ls -l` and `neofetch` |
+| `hostname` | `string` | `"one-terminal"` | Used by `{host}` and `neofetch` |
+| `theme` | [`BuiltInTheme`](#builtintheme) \| [`TerminalTheme`](#terminaltheme) \| `[BuiltInTheme, TerminalTheme]` | `"dracula"` | Colors, font and cursor. [Guide](/docs/customization#themes) |
+| `windowChrome` | [`WindowChromeStyle`](#windowchromestyle) \| `Partial<TerminalWindowChrome>` \| `[WindowChromeStyle, Partial<TerminalWindowChrome>]` | `"mac"` | Window frame. [Guide](/docs/customization#window-chrome) |
+| `extraCommands` | [`ExtraCommands`](#extracommands) | — | Custom commands. [Guide](/docs/extra-commands) |
+| `neofetch` | [`NeofetchConfig`](#neofetchconfig) | — | Logo and info for `neofetch`. [Guide](/docs/neofetch) |
+| `demo` | [`TerminalDemoConfig`](#terminaldemoconfig) | — | Scripted intro. [Guide](/docs/demo) |
+| `className` | `string` | — | Class for the outer wrapper |
+| `style` | `React.CSSProperties` | — | Inline styles for the outer wrapper |
 
-## Types
+## File system
 
-### DirectoryNode
+### `DirectoryNode`
 
-Represents a directory in the virtual file system.
-
-```typescript
+```ts
 type DirectoryNode = {
-  kind: "directory";
+  kind: 'directory';
   entries: Record<string, FSNode>;
 };
 ```
 
-### FileNode
+### `FSNode`
 
-Represents a file (text or link).
-
-```typescript
+```ts
+type FSNode = FileNode | DirectoryNode;
 type FileNode = TextFileNode | LinkFileNode;
+```
 
+### `TextFileNode`
+
+```ts
 type TextFileNode = {
-  kind: "file";
-  fileType: "text";
+  kind: 'file';
+  fileType: 'text';
   content: string;
 };
+```
 
+### `LinkFileNode`
+
+```ts
 type LinkFileNode = {
-  kind: "file";
-  fileType: "link";
+  kind: 'file';
+  fileType: 'link';
   href: string;
-  label?: string;
-  target?: "_blank" | "_self";
+  label?: string;                // shown instead of href by `cat`
+  target?: '_blank' | '_self';   // default "_blank"
 };
+```
+
+## Appearance
+
+### `BuiltInTheme`
+
+```ts
+type BuiltInTheme = 'dracula' | 'solarizedDark' | 'solarizedLight' | 'monokai' | 'light';
+```
+
+### `TerminalTheme`
+
+All fields are optional. They're merged over the base theme.
+
+```ts
+type TerminalTheme = {
+  backgroundColor?: string;
+  textColor?: string;
+  promptColor?: string;
+  fontFamily?: string;
+  fontSize?: string;
+  lineHeight?: string;
+  cursor?: Partial<CursorOptions>;
+};
+```
+
+### `CursorOptions`
+
+```ts
+type CursorShape = 'block' | 'beam' | 'underline';
+
+type CursorOptions = {
+  shape: CursorShape;
+  solidBlock?: boolean; // block only: draw over the text instead of behind it
+  color: string;
+  blink: boolean;
+  blinkRate: number;    // ms
+};
+```
+
+### `WindowChromeStyle`
+
+```ts
+type WindowChromeStyle = 'mac' | 'windows' | 'linux' | 'none';
+```
+
+### `TerminalWindowChrome`
+
+```ts
+type TerminalWindowChrome = {
+  style: WindowChromeStyle;
+  cornerRadius: number;
+  titleBarText: string;          // supports {cwd} {path} {user} {host}
+  titleBarCwd: TitleBarCwdMode;  // default "basename"
+  titleBarSeparator: string;     // default " — "
+  titleBarTextColor: string;
+  buttonColors: {
+    close: string;
+    min: string;
+    max: string;
+    iconColor: string;
+  };
+};
+
+type TitleBarCwdMode = 'basename' | 'full' | 'none';
+```
+
+### `NeofetchConfig`
+
+```ts
+type NeofetchConfig = {
+  logo?: string;                  // ASCII art
+  info?: Record<string, string>;  // replaces the default system info
+  colors?: boolean;               // color blocks, default true
+};
+```
+
+## Commands
+
+### `ExtraCommands`
+
+```ts
+type ExtraCommands = Record<string, ExtraCommandDefinition>;
+```
+
+### `ExtraCommandDefinition`
+
+```ts
+type ExtraCommandDefinition = {
+  run: (args: string[], ctx: ExtraCommandContext) => React.ReactNode;
+  description?: string;
+  usage?: string;
+  details?: string;
+  hidden?: boolean;
+  completion?: ExtraCommandCompletionConfig;
+};
+
+type ExtraCommandCompletionConfig = {
+  mode?: 'paths' | 'none';
+  fileScope?: 'any' | 'directories' | 'files' | 'textFiles' | 'linkFiles';
+};
+```
+
+### `ExtraCommandContext`
+
+```ts
+type ExtraCommandContext = {
+  path: string;
+  cwd: DirectoryNode | null;
+  resolvePath: (path: string) => string;
+  getNodeAt: (path: string) => FSNode | null;
+  commands: CommandInfo[];
+  history: string[];
+  stdin?: string;
+};
+```
+
+### `CommandInfo`
+
+```ts
+type CommandInfo = {
+  name: string;
+  usage: string;
+  description: string;
+  builtin: boolean;
+};
+```
+
+## Demo
+
+### `TerminalDemoConfig`
+
+```ts
+type TerminalDemoConfig = {
+  script: DemoScriptStep[];
+  mode?: 'run' | 'type-writer';                    // default "run"
+  behavior?: 'freeze' | 'interactive' | 'loop';    // default "freeze"
+  defaultCharDelayMs?: number;                     // default 40
+  defaultAfterLineDelayMs?: number;                // default 600
+  loopDelayMs?: number;                            // default 800
+};
+
+type DemoScriptStep =
+  | string
+  | { line: string; charDelayMs?: number; afterLineDelayMs?: number };
 ```
