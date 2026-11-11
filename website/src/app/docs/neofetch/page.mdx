@@ -1,0 +1,73 @@
+import { Callout } from 'nextra/components'
+
+# Neofetch
+
+`neofetch` prints an ASCII logo with info next to it and a row of color blocks, like the real tool. By default it
+shows fake system info. With the `neofetch` prop it becomes a mini CV.
+
+## Default output
+
+```text
+ .-----------------.   guest@one-terminal
+ | .-------------. |   ------------------
+ | | >_          | |   OS: one-terminal
+ | |             | |   Host: one-terminal
+ | |             | |   Shell: one-sh
+ | '-------------' |   Uptime: 3 mins
+ '-------. .-------'   Resolution: 1920x1080
+     .---' '---.       Commands: 17
+     '---------'       Files: 12
+```
+
+The title line uses the [`username` and `hostname`](/docs/prompt#username-and-hostname) props. Uptime counts
+from when the terminal mounted.
+
+## Your own info
+
+Pass `info` as label → value pairs. They replace the default lines and keep the order you wrote them in.
+
+```tsx
+<Terminal
+  username="ines"
+  hostname="portfolio"
+  neofetch={{
+    info: {
+      Role: 'Software Engineer',
+      Location: 'Lisbon, Portugal',
+      Languages: 'TypeScript, Rust, Go',
+      Currently: 'Building one-terminal',
+      Contact: "run 'cat contact.txt'",
+    },
+  }}
+/>
+```
+
+## Custom logo
+
+`logo` is a multi-line string. Template literals keep the spacing:
+
+```tsx
+const logo = String.raw`
+  /\_/\
+ ( o.o )
+  > ^ <
+`;
+
+<Terminal neofetch={{ logo, info: { Mood: 'Curious' } }} />
+```
+
+<Callout type="info">
+  Use `String.raw` when your art contains backslashes, so they aren't treated as escapes.
+</Callout>
+
+## Options
+
+| Option | Type | Default | Description |
+| :--- | :--- | :--- | :--- |
+| `logo` | `string` | Terminal icon | ASCII art shown on the left |
+| `info` | `Record<string, string>` | System info | Lines shown on the right |
+| `colors` | `boolean` | `true` | Show the row of color blocks |
+
+The logo and labels use the theme's `promptColor`. On narrow screens the info wraps below the logo.
+
+When piped (`neofetch | grep Role`), only the text lines are passed on.
