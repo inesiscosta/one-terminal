@@ -1,62 +1,148 @@
-# Customization
+import { Callout } from 'nextra/components'
 
-Customize the look and feel of your terminal with themes and window styles.
+# Themes & Window
+
+Change the colors, font, cursor and window frame. The prompt and title text are covered in
+[Prompt & Title Bar](/docs/prompt).
 
 ## Themes
 
-One Terminal comes with several built-in themes. You can use them by name or provide a custom theme object.
+The `theme` prop accepts three forms:
 
-### Built-in Themes
+```tsx
+// 1. A built-in theme by name
+<Terminal theme="monokai" />
 
-- `dracula` (default)
-- `solarizedDark`
-- `solarizedLight`
-- `monokai`
-- `light`
+// 2. A built-in theme plus overrides
+<Terminal theme={['dracula', { fontSize: '16px', cursor: { shape: 'underline' } }]} />
 
-### Custom Theme
-
-You can override specific properties of a preset or define a completely new theme.
-
-```jsx
-const customTheme = {
-  backgroundColor: "#000000",
-  textColor: "#00ff00",
-  cursor: {
-    color: "#00ff00",
-    shape: "block",
-    blink: true
-  }
-};
-
-<Terminal theme={customTheme} ... />
+// 3. Just overrides (applied on top of the default Dracula theme)
+<Terminal theme={{ backgroundColor: '#000', textColor: '#0f0', promptColor: '#0f0' }} />
 ```
 
-## Window Chrome
+### Built-in themes
 
-Control the appearance of the window frame.
+| Name | Background | Text | Prompt | Cursor |
+| :--- | :--- | :--- | :--- | :--- |
+| `dracula` (default) | `#282a36` | `#f8f8f2` | `#50fa7b` | Solid block |
+| `solarizedDark` | `#002b36` | `#93a1a1` | `#b58900` | Solid block |
+| `solarizedLight` | `#fdf6e3` | `#657b83` | `#b58900` | Solid block |
+| `monokai` | `#272822` | `#f8f8f2` | `#a6e22e` | Beam |
+| `light` | `#f6f8fa` | `#24292e` | `#0EB87E` | Beam |
+
+### Theme options
+
+| Option | Type | Description |
+| :--- | :--- | :--- |
+| `backgroundColor` | `string` | Window background |
+| `textColor` | `string` | Command and output text |
+| `promptColor` | `string` | The prompt, plus highlights like `neofetch` labels |
+| `fontFamily` | `string` | Any CSS `font-family` |
+| `fontSize` | `string` | Any CSS size, e.g. `"14px"` |
+| `lineHeight` | `string` | Any CSS line height, e.g. `"1.6"` |
+| `cursor` | `object` | See [Cursor](#cursor) |
+
+Overrides are merged into the base theme, so you only list what changes.
+
+### Switching with the site's dark mode
+
+`theme` is a normal prop, so you can derive it from your own theme state:
+
+```tsx
+const { resolvedTheme } = useTheme(); // e.g. from next-themes
+
+<Terminal theme={resolvedTheme === 'light' ? 'light' : 'dracula'} />
+```
+
+## Cursor
+
+```tsx
+<Terminal theme={['dracula', { cursor: { shape: 'beam', color: '#ff79c6', blinkRate: 500 } }]} />
+```
+
+| Option | Type | Description |
+| :--- | :--- | :--- |
+| `shape` | `"block" \| "beam" \| "underline"` | Cursor shape |
+| `solidBlock` | `boolean` | For `block`: draw a filled block over the text (`true`) or behind it (`false`) |
+| `color` | `string` | Cursor color |
+| `blink` | `boolean` | Whether the cursor blinks. It stays solid while typing. |
+| `blinkRate` | `number` | Blink interval in milliseconds |
+
+## Fonts
+
+The built-in themes ask for `"JetBrainsMono Nerd Font"` and fall back to your system's monospace font.
+One Terminal doesn't load fonts itself. Load the font on your page, or pick one you already have:
+
+```tsx
+<Terminal theme={['dracula', { fontFamily: 'var(--font-mono), monospace' }]} />
+```
+
+<Callout type="info">
+  Use a monospace font. Columns in `ls -l`, `help`, `tree` and `wc` only line up when every character has the
+  same width.
+</Callout>
+
+## Window chrome
+
+The window frame around the terminal. Pass a style name, an object, or a `[style, overrides]` pair:
+
+```tsx
+<Terminal windowChrome="windows" />
+<Terminal windowChrome={['linux', { cornerRadius: 0 }]} />
+<Terminal windowChrome="none" /> {/* no frame and a transparent background */}
+```
 
 ### Styles
 
-- `mac` (default) - macOS style traffic lights.
-- `windows` - Windows 10/11 style controls.
-- `linux` - Generic Linux style controls.
-- `none` - No window frame.
+| Style | Look |
+| :--- | :--- |
+| `mac` (default) | Traffic-light buttons on the left, centered title |
+| `windows` | Minimize / maximize / close on the right, title on the left |
+| `linux` | GNOME-style round buttons on the right, centered title |
+| `none` | No frame. The terminal blends into your page. |
 
-### Custom Chrome
+### Chrome options
 
-You can customize the window radius, title, and button colors.
+| Option | Type | Description |
+| :--- | :--- | :--- |
+| `style` | `"mac" \| "windows" \| "linux"` | Which frame to draw |
+| `cornerRadius` | `number` | Window corner radius in px (mac 14, windows 7, linux 8) |
+| `titleBarText` | `string` | Title text. See [Prompt & Title Bar](/docs/prompt#title-bar). |
+| `titleBarCwd` | `"basename" \| "full" \| "none"` | How the current directory is added to the title |
+| `titleBarSeparator` | `string` | Between the title text and the directory (default `" — "`) |
+| `titleBarTextColor` | `string` | Title color |
+| `buttonColors` | `{ close, min, max, iconColor }` | Button and icon colors |
 
-```jsx
-const customChrome = {
-  style: "mac",
-  titleBarText: "My Terminal",
-  buttonColors: {
-    close: "#ff0000",
-    min: "#ffff00",
-    max: "#00ff00"
-  }
-};
+```tsx
+<Terminal
+  windowChrome={{
+    style: 'mac',
+    cornerRadius: 10,
+    buttonColors: { close: '#ff5f56', min: '#ffbd2e', max: '#27c93f', iconColor: '#333' },
+  }}
+/>
+```
 
-<Terminal windowChrome={customChrome} ... />
+The buttons are decorative and don't do anything when clicked.
+
+<Callout type="info">
+  With a light background (for example the `light` and `solarizedLight` themes), the title and icon colors
+  switch to dark automatically so they stay readable.
+</Callout>
+
+## Size and layout
+
+The terminal fills its container (`width` and `height` of 100%), so **give the parent a height**:
+
+```tsx
+<div style={{ height: 420, maxWidth: 720 }}>
+  <Terminal fileStructure={files} />
+</div>
+```
+
+Output scrolls inside the terminal and always follows the newest line. `className` and `style` are applied to
+the outer wrapper:
+
+```tsx
+<Terminal className="shadow-2xl rounded-xl" style={{ height: '60vh' }} />
 ```
