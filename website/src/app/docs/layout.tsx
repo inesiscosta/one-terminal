@@ -11,7 +11,7 @@ export default async function DocsLayout({ children }: { children: ReactNode }) 
     <Layout
       navbar={<Navbar logo={<b>One-Terminal</b>} />}
       pageMap={pageMap as PageMapItem[]}
-      docsRepositoryBase="https://github.com/inesiscosta/one-terminal/tree/main/website/src/content"
+      docsRepositoryBase="https://github.com/inesiscosta/one-terminal/tree/main/website/src/app/docs"
       feedback={{ content: null }}
       editLink={null}
       sidebar={{ defaultMenuCollapseLevel: 1, toggleButton: false }}
