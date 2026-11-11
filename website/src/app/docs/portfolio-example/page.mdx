@@ -1,0 +1,138 @@
+import { Callout } from 'nextra/components'
+
+# Portfolio Example
+
+A complete, copy-pasteable terminal for a personal site. It puts together the file system, custom commands,
+`neofetch`, theming, and an intro demo.
+
+```tsx filename="components/PortfolioTerminal.tsx"
+'use client';
+
+import { Terminal, type DirectoryNode, type ExtraCommands } from 'one-terminal';
+
+const files: DirectoryNode = {
+  kind: 'directory',
+  entries: {
+    'about.md': {
+      kind: 'file',
+      fileType: 'text',
+      content: `# Hi, I'm Jack 👋
+Software engineer in Lisbon. I like compilers, terminals and good coffee.`,
+    },
+    'skills.txt': {
+      kind: 'file',
+      fileType: 'text',
+      content: 'TypeScript\nReact\nRust\nGo\nPostgreSQL',
+    },
+    projects: {
+      kind: 'directory',
+      entries: {
+        'one-terminal.md': {
+          kind: 'file',
+          fileType: 'text',
+          content: '# one-terminal\nA React terminal component.\nStack: TypeScript, React',
+        },
+        'tiny-db.md': {
+          kind: 'file',
+          fileType: 'text',
+          content: '# tiny-db\nA toy database written in Rust.\nStack: Rust',
+        },
+      },
+    },
+    links: {
+      kind: 'directory',
+      entries: {
+        github: { kind: 'file', fileType: 'link', href: 'https://github.com/your-name' },
+        linkedin: { kind: 'file', fileType: 'link', href: 'https://linkedin.com/in/your-name' },
+      },
+    },
+    '.secret': { kind: 'file', fileType: 'text', content: 'You found it! 🎉 Mention this in your email.' },
+  },
+};
+
+const commands: ExtraCommands = {
+  projects: {
+    usage: 'projects [name]',
+    description: 'List my projects, or show one',
+    run: (args, ctx) => {
+      const dir = ctx.getNodeAt('/projects');
+      if (!dir || dir.kind !== 'directory') return 'No projects yet.';
+      if (!args[0]) return Object.keys(dir.entries).map((name) => name.replace(/\.md$/, '')).join('\n');
+      const file = dir.entries[`${args[0]}.md`];
+      return file?.kind === 'file' && file.fileType === 'text' ? file.content : `projects: ${args[0]}: not found`;
+    },
+  },
+  contact: {
+    description: 'How to reach me',
+    run: () => (
+      <span>
+        Email: <a href="mailto:jack@example.com">jack@example.com</a>
+      </span>
+    ),
+  },
+  open: {
+    usage: 'open <link>',
+    description: 'Open a link in a new tab',
+    completion: { mode: 'paths', fileScope: 'linkFiles' },
+    run: (args, ctx) => {
+      const node = ctx.getNodeAt(args[0] ?? '');
+      if (node?.kind !== 'file' || node.fileType !== 'link') return 'usage: open links/<name>';
+      window.open(node.href, '_blank', 'noopener');
+      return `Opening ${node.href}...`;
+    },
+  },
+  sudo: { hidden: true, run: () => 'Permission denied: you are not in the sudoers file. 😉' },
+};
+
+const demo = {
+  script: ['neofetch', 'ls', 'projects'],
+  behavior: 'interactive' as const,
+  defaultCharDelayMs: 50,
+};
+
+export default function PortfolioTerminal() {
+  return (
+    <div style={{ height: 480, maxWidth: 800, margin: '0 auto' }}>
+      <Terminal
+        fileStructure={files}
+        username="jack"
+        hostname="portfolio"
+        prompt="{user}@{host}:{path}$ "
+        theme={['dracula', { fontSize: '15px' }]}
+        windowChrome={['mac', { titleBarText: '{user}@{host}: {path}' }]}
+        welcomeMessage="Welcome! Type 'help' to see what you can do."
+        neofetch={{
+          info: {
+            Role: 'Software Engineer',
+            Location: 'Lisbon, Portugal',
+            Languages: 'TypeScript, Rust, Go',
+            Contact: "run 'contact'",
+          },
+        }}
+        extraCommands={commands}
+        demo={demo}
+      />
+    </div>
+  );
+}
+```
+
+Things to try in it:
+
+```bash
+cat about.md
+grep -ri rust projects
+projects tiny-db
+open links/github
+ls -a              # reveals .secret
+history | tail -3
+```
+
+<Callout type="info">
+  `files`, `commands` and `demo` are defined outside the component, so re-renders don't rebuild them or restart
+  the demo.
+</Callout>
+
+<Callout type="warning">
+  Wildcards like `*.md` aren't expanded. Use `grep -r` or pass the files by name.
+</Callout>
