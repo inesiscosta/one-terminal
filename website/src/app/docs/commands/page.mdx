@@ -1,0 +1,236 @@
+import { Callout } from 'nextra/components'
+
+# Commands
+
+One Terminal ships with the commands people instinctively type, and they behave like their Unix
+counterparts. Typing `help` lists them all, and `help <command>` explains one.
+
+## Overview
+
+| Command | What it does |
+| :--- | :--- |
+| [`help`](#help) | List commands, or show details for one |
+| [`ls`](#ls) | List directory contents |
+| [`cd`](#cd) | Change directory |
+| [`pwd`](#pwd) | Print the current directory |
+| [`tree`](#tree) | Show the directory structure |
+| [`cat`](#cat) | Print files |
+| [`grep`](#grep) | Find lines matching a pattern |
+| [`head` / `tail`](#head--tail) | First / last lines |
+| [`wc`](#wc) | Count lines, words and characters |
+| [`nl`](#nl) | Number lines |
+| [`echo`](#echo) | Print text |
+| [`whoami`](#whoami) | Print the username |
+| [`neofetch`](#neofetch) | Show a logo and info |
+| [`history`](#history) | Show and re-run past commands |
+| [`sleep`](#sleep) | Wait (stop with `Ctrl+C`) |
+| [`clear`](#clear) | Clear the screen |
+
+## Shell syntax
+
+### Quotes and escapes
+
+Quotes group words and are removed before the command sees them, just like in bash:
+
+```bash
+echo "cat"                 # cat
+cat "my file.txt"          # reads the file called: my file.txt
+cat my\ file.txt           # same thing, with a backslash
+echo 'single $quotes'      # everything inside single quotes is literal
+echo "say \"hi\""          # say "hi"
+```
+
+An unclosed quote prints `unexpected EOF while looking for matching '"'`.
+
+### Pipes
+
+`|` sends one command's output into the next one:
+
+```bash
+history | tail -5
+cat skills.txt | grep -i rust | wc -l
+grep -r TODO | head
+```
+
+Commands that read files (`cat`, `grep`, `head`, `tail`, `wc`, `nl`) read the piped text when you don't give
+them a file. Your [extra commands](/docs/extra-commands#reading-piped-input) can read it too.
+
+### Flags
+
+Flags work the way you're used to:
+
+```bash
+ls -la                 # combined short flags
+tree -L 2              # flag with a value...
+tree -L2               # ...or attached
+head -5 notes.txt      # numeric shorthand for -n 5
+grep -- -v notes.txt   # -- stops option parsing (searches for "-v")
+```
+
+Unknown flags print an error, e.g. `ls: invalid option -- 'z'`.
+
+### History expansion
+
+| Syntax | Expands to |
+| :--- | :--- |
+| `!!` | The last command (try `sudo !!`) |
+| `!n` | Command number `n` from `history` |
+| `!-n` | The command `n` steps back |
+| `!abc` | The most recent command starting with `abc` |
+| `!$` | The last argument of the last command |
+| `!^` | The first argument of the last command |
+| `^old^new` | The last command with `old` replaced by `new` |
+
+The expanded command is printed before it runs, like in bash. Nothing inside single quotes is expanded.
+
+## Reference
+
+### help
+
+```bash
+help            # every command, the keyboard shortcuts, and tips
+help grep       # usage and flags for one command
+```
+
+Your own commands appear under **More commands** using their `description` and `usage`. You can also
+[replace `help` entirely](/docs/extra-commands#custom-help).
+
+### ls
+
+```bash
+ls [-aAlF1] [path...]
+```
+
+| Flag | Effect |
+| :--- | :--- |
+| `-a` | Include hidden entries, plus `.` and `..` |
+| `-A` | Include hidden entries |
+| `-l` | Long listing (permissions, owner, size, link targets) |
+| `-1` | One entry per line |
+| `-F` | Append `/` to directories and `@` to links |
+
+With several paths, each directory gets a `name:` header.
+
+### cd
+
+```bash
+cd projects    # relative
+cd /projects   # absolute
+cd ..          # parent
+cd             # home (the root)
+cd -           # back to the previous directory
+```
+
+### pwd
+
+Prints the absolute path of the current directory, e.g. `/projects/web`.
+
+### tree
+
+```bash
+tree [-ad] [-L level] [path...]
+```
+
+| Flag | Effect |
+| :--- | :--- |
+| `-a` | Include hidden entries |
+| `-d` | Directories only |
+| `-L n` | Descend at most `n` levels |
+
+Prints a summary at the end, e.g. `3 directories, 7 files`.
+
+### cat
+
+```bash
+cat [-n] [file...]
+```
+
+Prints one or more files. Link files become clickable links. `-n` numbers every line. With no file, it prints
+piped input.
+
+### grep
+
+```bash
+grep [-icnvlwrF] pattern [file...]
+```
+
+The pattern is a regular expression (if it isn't valid, it's matched as plain text). Matches are highlighted.
+
+| Flag | Effect |
+| :--- | :--- |
+| `-i` | Ignore case |
+| `-n` | Show line numbers |
+| `-v` | Show lines that *don't* match |
+| `-c` | Count matching lines per file |
+| `-l` | Only list files that match |
+| `-w` | Match whole words only |
+| `-r` | Search directories recursively (the current one by default) |
+| `-F` | Treat the pattern as plain text |
+
+```bash
+grep -i "rust" skills.txt
+grep -rn TODO projects
+history | grep cd
+```
+
+### head / tail
+
+```bash
+head [-n N] [file...]   # first N lines (default 10)
+tail [-n N] [file...]   # last N lines (default 10)
+head -3 notes.txt       # shorthand
+```
+
+### wc
+
+```bash
+wc [-lwc] [file...]
+```
+
+Counts lines (`-l`), words (`-w`) and characters (`-c`). With no flags it shows all three, and with several
+files it adds a total.
+
+### nl
+
+Numbers the non-empty lines of files or piped input.
+
+### echo
+
+Prints its arguments separated by spaces. Quotes are removed first, so `echo "a   b"` keeps the spaces.
+
+### whoami
+
+Prints the [`username`](/docs/prompt#username-and-hostname) prop (`guest` by default).
+
+### neofetch
+
+Shows a logo with system info next to it, or your own info. See [Neofetch](/docs/neofetch).
+
+### history
+
+```bash
+history       # every command, numbered
+history 5     # the last 5
+history -c    # clear the history
+```
+
+Use the numbers with `!n`. The history lasts for the session and resets on reload.
+
+### sleep
+
+```bash
+sleep 2       # seconds
+sleep 1.5     # decimals
+sleep 2m      # also s, m and h suffixes
+```
+
+The prompt disappears while it runs. Press `Ctrl+C` to stop it early.
+
+### clear
+
+Clears the screen and the welcome message. `Ctrl+L` does the same but keeps what you are typing.
+
+<Callout type="info">
+  Any built-in can be replaced: define an extra command with the same name (for example `ls` or `whoami`) and
+  yours runs instead. See [Extra Commands](/docs/extra-commands#overriding-built-in-commands).
+</Callout>
