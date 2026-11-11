@@ -1,0 +1,73 @@
+import { Callout } from 'nextra/components'
+
+# Keyboard Shortcuts
+
+The terminal supports the bash/readline shortcuts people's fingers already know. Click the terminal to focus it.
+
+## Completion and history
+
+| Keys | Action |
+| :--- | :--- |
+| `Tab`, `Ctrl+I` | Complete a command or path. Press again to cycle through options. |
+| `↑` / `↓`, `Ctrl+P` / `Ctrl+N` | Previous / next command in history |
+| `Ctrl+R` | Search history backward. Press again for older matches. |
+| `Ctrl+S` | Search history forward |
+| `Ctrl+O` | Run the current line (or search match) and load the next history entry |
+
+Tab completion adds `/` after folders and a space after files, quotes names with spaces, and completes
+commands after a `|`. Hidden files are only offered when you start typing a `.`.
+
+### While searching history
+
+When you press `Ctrl+R`, the prompt becomes ``(reverse-i-search)`query': match``. Then:
+
+| Keys | Action |
+| :--- | :--- |
+| Type / `Backspace` | Refine the search |
+| `Ctrl+R` / `Ctrl+S` | Next older / newer match |
+| `Enter` | Run the match |
+| `Esc`, arrow keys, `Tab` | Keep the match on the line so you can edit it |
+| `Ctrl+G` | Cancel and restore what you had typed |
+| `Ctrl+C` | Cancel |
+
+## Moving the cursor
+
+| Keys | Action |
+| :--- | :--- |
+| `Ctrl+A` / `Ctrl+E` | Start / end of the line |
+| `Ctrl+B` / `Ctrl+F` | Back / forward one character |
+| `Alt+B` / `Alt+F` | Back / forward one word |
+| `←` / `→` | Back / forward one character |
+
+## Editing
+
+| Keys | Action |
+| :--- | :--- |
+| `Ctrl+H` | Delete the character before the cursor (like `Backspace`) |
+| `Ctrl+D` | Delete the character under the cursor |
+| `Ctrl+U` | Cut from the cursor to the start of the line |
+| `Ctrl+K` | Cut from the cursor to the end of the line |
+| `Ctrl+W` | Cut the previous word (up to whitespace) |
+| `Alt+Backspace` | Cut the previous word (up to punctuation) |
+| `Alt+D` | Cut the next word |
+| `Ctrl+Y` | Paste the last cut text |
+| `Ctrl+T` | Swap the two characters before the cursor |
+| `Alt+.` | Insert the last argument of the previous command |
+
+## Screen and running commands
+
+| Keys | Action |
+| :--- | :--- |
+| `Enter` | Run the line |
+| `Ctrl+C` | Cancel the line (shows `^C`) or stop a running `sleep` |
+| `Ctrl+L` | Clear the screen but keep the current line |
+
+If text is selected on the page, `Ctrl+C` copies it instead of cancelling.
+
+<Callout type="warning">
+  Browsers keep a few shortcuts for themselves and never pass them to the page. On Windows and Linux,
+  Chrome reserves `Ctrl+W` (close tab), `Ctrl+N` (new window) and `Ctrl+T` (new tab). On macOS every shortcut
+  works, because browser shortcuts use `Cmd` instead of `Ctrl`.
+</Callout>
+
+`Alt` is `Option` on a Mac.
