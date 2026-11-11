@@ -1,51 +1,337 @@
+import { Callout } from 'nextra/components'
+
 # Extra Commands
 
-You can extend the terminal's functionality by adding custom commands.
+Add your own commands with the `extraCommands` prop. Keys are command names, and values say what the command
+does and how it shows up in `help`.
 
-## Defining Commands
+```tsx
+import { Terminal, type ExtraCommands } from 'one-terminal';
 
-Pass an `extraCommands` object to the `Terminal` component. Keys are the command names, and values are the command definitions.
-
-```typescript
-import { Terminal } from "one-terminal";
-
-const commands = {
-  // Simple command that returns a string
+const commands: ExtraCommands = {
   hello: {
-    run: (args) => `Hello, ${args[0] || "World"}!`,
-  },
-  // Command returning a React component
-  alert: {
-    run: (args) => <span style={{ color: "red" }}>Alert: {args.join(" ")}</span>,
+    description: 'Say hello',
+    usage: 'hello [name]',
+    run: (args) => `Hello, ${args[0] ?? 'world'}!`,
   },
 };
 
-<Terminal extraCommands={commands} ... />
+<Terminal fileStructure={files} extraCommands={commands} />
 ```
 
-## Command Definition
+```bash
+guest@~:$ hello "Jack Turner"
+Hello, Jack Turner!
+```
 
-Each command is defined by an object with a `run` function and optional `completion` config.
+<Callout type="info">
+  Define `extraCommands` outside your component (or memoize it) so the object stays the same between renders.
+</Callout>
 
-```typescript
+## Command definition
+
+```ts
 type ExtraCommandDefinition = {
   run: (args: string[], ctx: ExtraCommandContext) => React.ReactNode;
+  description?: string; // one line in `help`
+  usage?: string;       // e.g. "projects [name]" (defaults to the name)
+  details?: string;     // extra text for `help <command>`
+  hidden?: boolean;     // leave out of `help` and tab completion (still runnable)
   completion?: {
-    mode?: "paths" | "none";
-    fileScope?: "none" | "any" | "directories" | "files" | "textFiles" | "linkFiles";
+    mode?: 'paths' | 'none';
+    fileScope?: 'any' | 'directories' | 'files' | 'textFiles' | 'linkFiles';
   };
 };
 ```
 
-### Context
+## Arguments
 
-The `run` function receives a context object as the second argument.
+`args` has the words after the command name, already parsed like a shell would:
 
-```typescript
+| Typed | `args` |
+| :--- | :--- |
+| `greet` | `[]` |
+| `greet Jack` | `["Jack"]` |
+| `greet "Jack Turner" -v` | `["Jack Turner", "-v"]` |
+| `greet a\ b` | `["a b"]` |
+
+Flags aren't interpreted for you. Check for them yourself:
+
+```tsx
+run: (args) => {
+  const loud = args.includes('-l');
+  const name = args.find((a) => !a.startsWith('-')) ?? 'world';
+  return loud ? `HELLO, ${name.toUpperCase()}!` : `Hello, ${name}.`;
+},
+```
+
+## What to return
+
+| Return | Shown as | Piped as |
+| :--- | :--- | :--- |
+| `string` / `number` | Text (keeps `\n` line breaks) | That text |
+| A React element | Rendered as-is | Empty text |
+| `null`, `undefined`, `false` | Nothing | Empty text |
+
+React elements let you show links, colors and images:
+
+```tsx
+contact: {
+  description: 'How to reach me',
+  run: () => (
+    <span>
+      Email me at <a href="mailto:hi@example.com">hi@example.com</a> or{' '}
+      <span style={{ color: '#ff79c6' }}>find me on GitHub</span>.
+    </span>
+  ),
+},
+```
+
+Return a string whenever you can, so the output can be piped into `grep`, `head`, `wc`…
+
+<Callout type="warning">
+  `run` must be synchronous: a returned Promise isn't awaited. Side effects such as `window.open` are fine.
+  If `run` throws, the terminal prints `error: executing <name>` and logs the error to the console.
+</Callout>
+
+## The context object
+
+The second argument tells you where the user is and what's around:
+
+```ts
 type ExtraCommandContext = {
-  getNodeAt: (path: string) => FSNode | null;
-  resolvePath: (path: string) => string;
-  cwd: DirectoryNode | null;
-  path: string;
+  path: string;                                  // current directory, e.g. "/projects"
+  cwd: DirectoryNode | null;                     // the current directory's node
+  resolvePath: (path: string) => string;         // "../a.md" → "/a.md" (understands ~, ., ..)
+  getNodeAt: (path: string) => FSNode | null;    // look up a file or folder (relative paths work)
+  commands: CommandInfo[];                       // every command: { name, usage, description, builtin }
+  history: string[];                             // previously run commands, oldest first
+  stdin?: string;                                // text piped in, if any
 };
+```
+
+### Reading files
+
+```tsx
+wordcount: {
+  description: 'Count words in a file',
+  usage: 'wordcount <file>',
+  completion: { mode: 'paths', fileScope: 'textFiles' },
+  run: (args, ctx) => {
+    const node = ctx.getNodeAt(args[0] ?? '');
+    if (!node || node.kind !== 'file' || node.fileType !== 'text') return `wordcount: ${args[0]}: not a text file`;
+    return `${node.content.split(/\s+/).filter(Boolean).length} words`;
+  },
+},
+```
+
+### Reading piped input
+
+`ctx.stdin` holds the previous command's output when your command is used in a pipe:
+
+```tsx
+upper: {
+  description: 'Uppercase piped text',
+  run: (args, ctx) => (ctx.stdin ?? args.join(' ')).toUpperCase(),
+},
+```
+
+```bash
+cat about.txt | upper
+history | upper | grep CD
+```
+
+### Opening links
+
+```tsx
+open: {
+  description: 'Open a link file in a new tab',
+  usage: 'open <file>',
+  completion: { mode: 'paths', fileScope: 'linkFiles' },
+  run: (args, ctx) => {
+    const node = ctx.getNodeAt(args[0] ?? '');
+    if (!node || node.kind !== 'file' || node.fileType !== 'link') return `open: ${args[0]}: not a link`;
+    window.open(node.href, '_blank', 'noopener');
+    return `Opening ${node.href}...`;
+  },
+},
+```
+
+## Tab completion for arguments
+
+By default, only the command name completes. Set `completion` to complete paths too:
+
+```tsx
+completion: { mode: 'paths', fileScope: 'textFiles' }
+```
+
+| `fileScope` | Offers |
+| :--- | :--- |
+| `any` (default) | Files and folders |
+| `files` | All files |
+| `textFiles` | Text files |
+| `linkFiles` | Link files |
+| `directories` | Folders only |
+
+Folders are always offered too, so users can navigate into them.
+
+## Help
+
+Your commands are listed under **More commands** in `help`, using `usage` and `description`.
+`help <command>` also prints `details`:
+
+```tsx
+projects: {
+  usage: 'projects [name]',
+  description: 'List my projects',
+  details: 'Pass a project name to see its details, e.g. "projects one-terminal".',
+  run: (args) => { /* ... */ },
+},
+```
+
+### Custom help
+
+Define your own `help` to replace the built-in one. `ctx.commands` has everything you need:
+
+```tsx
+help: {
+  description: 'Show this message',
+  run: (_args, ctx) =>
+    [
+      'Hi! Here is what you can do:',
+      '',
+      ...ctx.commands.map((c) => `  ${c.name.padEnd(10)} ${c.description}`),
+    ].join('\n'),
+},
+```
+
+## Overriding built-in commands
+
+Extra commands win over built-ins with the same name, so you can replace any of them:
+
+```tsx
+whoami: { run: () => 'a curious visitor 👀' },
+ls: { run: () => 'Nice try. Use the GUI. 😄' },
+```
+
+## Editable files
+
+`fileStructure` is a normal prop, so commands can change it. Keep the files in React state and update them from
+your commands. Here are `mkdir`, `touch`, `rm` and `mv`:
+
+```tsx
+import { useMemo, useState } from 'react';
+import { Terminal, type DirectoryNode, type ExtraCommands, type FSNode } from 'one-terminal';
+
+// Returns a copy of `root` with `node` placed at `path`, or removed when `node` is null
+function setNodeAt(root: DirectoryNode, path: string, node: FSNode | null): DirectoryNode {
+  const [name, ...rest] = path.split('/').filter(Boolean);
+  if (!name) return root;
+  const entries = { ...root.entries };
+  if (rest.length === 0) {
+    if (node) entries[name] = node;
+    else delete entries[name];
+  } else {
+    const child = entries[name];
+    if (child?.kind !== 'directory') return root;
+    entries[name] = setNodeAt(child, rest.join('/'), node);
+  }
+  return { ...root, entries };
+}
+
+const parentOf = (path: string) => path.slice(0, path.lastIndexOf('/')) || '/';
+
+export function EditableTerminal({ initialFiles }: { initialFiles: DirectoryNode }) {
+  const [files, setFiles] = useState(initialFiles);
+
+  const commands = useMemo<ExtraCommands>(
+    () => ({
+      mkdir: {
+        usage: 'mkdir <dir>',
+        description: 'Create a directory',
+        run: (args, ctx) => {
+          if (!args[0]) return 'mkdir: missing operand';
+          if (ctx.getNodeAt(args[0])) return `mkdir: ${args[0]}: File exists`;
+          const path = ctx.resolvePath(args[0]);
+          if (ctx.getNodeAt(parentOf(path))?.kind !== 'directory') return `mkdir: ${args[0]}: No such file or directory`;
+          setFiles((root) => setNodeAt(root, path, { kind: 'directory', entries: {} }));
+        },
+      },
+      touch: {
+        usage: 'touch <file>',
+        description: 'Create an empty file',
+        run: (args, ctx) => {
+          if (!args[0]) return 'touch: missing file operand';
+          if (ctx.getNodeAt(args[0])) return;
+          const path = ctx.resolvePath(args[0]);
+          if (ctx.getNodeAt(parentOf(path))?.kind !== 'directory') return `touch: ${args[0]}: No such file or directory`;
+          setFiles((root) => setNodeAt(root, path, { kind: 'file', fileType: 'text', content: '' }));
+        },
+      },
+      rm: {
+        usage: 'rm [-rf] <path>',
+        description: 'Remove a file or directory',
+        completion: { mode: 'paths' },
+        run: (args, ctx) => {
+          const flags = args.filter((a) => a.startsWith('-')).join('');
+          const target = args.find((a) => !a.startsWith('-'));
+          if (!target) return 'rm: missing operand';
+          const node = ctx.getNodeAt(target);
+          if (!node) return flags.includes('f') ? undefined : `rm: ${target}: No such file or directory`;
+          if (node.kind === 'directory' && !flags.includes('r')) return `rm: ${target}: is a directory`;
+          const path = ctx.resolvePath(target);
+          // Removing / empties everything
+          setFiles((root) => (path === '/' ? { ...root, entries: {} } : setNodeAt(root, path, null)));
+        },
+      },
+      mv: {
+        usage: 'mv <source> <destination>',
+        description: 'Move or rename',
+        completion: { mode: 'paths' },
+        run: ([from, to], ctx) => {
+          if (!from || !to) return 'mv: missing operand';
+          const node = ctx.getNodeAt(from);
+          if (!node) return `mv: ${from}: No such file or directory`;
+          // Moving onto a folder puts the item inside it, otherwise it's a rename
+          const destPath =
+            ctx.getNodeAt(to)?.kind === 'directory'
+              ? `${ctx.resolvePath(to)}/${ctx.resolvePath(from).split('/').pop()}`
+              : ctx.resolvePath(to);
+          setFiles((root) => setNodeAt(setNodeAt(root, ctx.resolvePath(from), null), destPath, node));
+        },
+      },
+    }),
+    [],
+  );
+
+  return <Terminal fileStructure={files} extraCommands={commands} />;
+}
+```
+
+```bash
+mkdir notes
+touch notes/todo.txt
+mv notes/todo.txt notes/done.txt
+rm -rf notes
+rm -rf /        # yes, this works too. Reload to get everything back.
+```
+
+<Callout type="info">
+  Changes only live in memory. Reloading the page brings back `initialFiles`. To keep them, save `files` to
+  `localStorage` in a `useEffect` and read it back in the `useState` initializer.
+</Callout>
+
+## Easter eggs
+
+Hidden commands work but don't appear in `help` or tab completion:
+
+```tsx
+sudo: {
+  hidden: true,
+  run: (args) => `${args.join(' ') || 'that'}? Nice try. This incident will be reported.`,
+},
+coffee: {
+  hidden: true,
+  run: () => '☕ Brewing... done. Back to work!',
+},
 ```
