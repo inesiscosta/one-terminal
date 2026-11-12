@@ -130,7 +130,8 @@ export const Terminal: React.FC<Partial<TerminalProps>> = ({
             caret.syncSoon();
           }}
         >
-          <div style={styles.row}>
+          {/* Screen readers announce new output as it's added */}
+          <div role="log" aria-live="polite" aria-label="Terminal output" style={styles.row}>
             {showBanner && welcomeMessage && <div style={styles.historyLine}>{welcomeMessage}</div>}
 
             {state.history.map((entry, index) => (
@@ -148,10 +149,16 @@ export const Terminal: React.FC<Partial<TerminalProps>> = ({
             {searchLabel !== null ? (
               <span style={{ ...promptStyle, color: 'inherit' }}>{searchLabel}</span>
             ) : (
-              !state.busy && <span style={promptStyle}>{currentPrompt}</span>
+              !state.busy && (
+                <span style={promptStyle} aria-hidden>
+                  {currentPrompt}
+                </span>
+              )
             )}
             <span style={styles.inputContainer}>
-              <span style={styles.inputText}>{shownLine || ' '}</span>
+              <span style={styles.inputText} aria-hidden>
+                {shownLine || ' '}
+              </span>
               <span ref={caret.measurerRef} style={styles.realCaret} aria-hidden />
               <span style={cursorStyle} aria-hidden />
               <input
@@ -159,6 +166,7 @@ export const Terminal: React.FC<Partial<TerminalProps>> = ({
                 style={styles.hiddenInput}
                 value={state.input}
                 disabled={inputDisabled}
+                aria-label={`Terminal input, ${currentPrompt.trim()}`}
                 onChange={(e) => {
                   if (state.busy || state.search) return;
                   engine.setInput(e.target.value);
@@ -172,6 +180,7 @@ export const Terminal: React.FC<Partial<TerminalProps>> = ({
                 spellCheck={false}
                 autoCapitalize="none"
                 autoCorrect="off"
+                autoComplete="off"
               />
             </span>
           </div>
