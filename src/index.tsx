@@ -12,6 +12,7 @@ import {
   DEFAULT_FILE_STRUCTURE,
   DEFAULT_HOSTNAME,
   DEFAULT_PROMPT,
+  DEFAULT_SHELL_NAME,
   DEFAULT_START_PATH,
   DEFAULT_THEME,
   DEFAULT_USERNAME,
@@ -31,6 +32,7 @@ export const Terminal: React.FC<Partial<TerminalProps>> = ({
   prompt = DEFAULT_PROMPT,
   username = DEFAULT_USERNAME,
   hostname = DEFAULT_HOSTNAME,
+  shellName = DEFAULT_SHELL_NAME,
   neofetch,
   windowChrome = DEFAULT_CHROME_STYLE,
   theme = DEFAULT_THEME,
@@ -51,6 +53,7 @@ export const Terminal: React.FC<Partial<TerminalProps>> = ({
     extraCommands,
     username,
     hostname,
+    shellName,
     neofetch,
     accentColor: resolvedTheme.promptColor,
   });

@@ -37,14 +37,22 @@ terminal.
   End the prompt with a space (`"$ "`) so typed text doesn't touch it.
 </Callout>
 
-## Username and hostname
+## Username, hostname and shell name
 
 ```tsx
-<Terminal username="ines" hostname="portfolio" />
+<Terminal username="ines" hostname="portfolio" shellName="bash" />
 ```
 
 - `username` (default `guest`) is used by `whoami`, `{user}`, `ls -l` and `neofetch`.
 - `hostname` (default `one-terminal`) is used by `{host}` and `neofetch`.
+- `shellName` (default `zsh`) starts shell errors, like real shells do, and is shown by `neofetch`:
+
+```bash
+guest@~:$ upper
+zsh: command not found: upper
+```
+
+Change it to anything you like, e.g. `shellName="bash"` gives `bash: command not found: upper`.
 
 ## Welcome message
 

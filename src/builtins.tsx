@@ -136,6 +136,7 @@ export type ShellEnv = {
   previousPath: string | null;
   username: string;
   hostname: string;
+  shellName: string;
   accentColor?: string;
   neofetch?: NeofetchConfig;
   startedAt: number;
@@ -688,7 +689,7 @@ function neofetch(env: ShellEnv): ExecResult {
     : [
         ['OS', 'one-terminal'],
         ['Host', env.hostname],
-        ['Shell', 'one-sh'],
+        ['Shell', env.shellName],
         ['Uptime', formatUptime(Date.now() - env.startedAt)],
         ...(typeof window !== 'undefined' && window.screen
           ? [['Resolution', `${window.screen.width}x${window.screen.height}`] as [string, string]]

@@ -38,6 +38,7 @@ function makeEnv(overrides: Partial<ShellEnv> = {}): ShellEnv {
     previousPath: null,
     username: 'ines',
     hostname: 'box',
+    shellName: 'zsh',
     startedAt: Date.now(),
     commands: [],
     history: [],

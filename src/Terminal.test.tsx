@@ -125,6 +125,24 @@ describe('<Terminal />', () => {
     expect(input).toHaveAccessibleName('Terminal input, guest@~:$');
   });
 
+  it('prefixes shell errors with the shell name', async () => {
+    const { output, run } = setup();
+    await run('upper');
+    expect(output).toHaveTextContent('zsh: command not found: upper');
+    await run('echo "oops');
+    expect(output).toHaveTextContent('zsh: unexpected EOF while looking for matching `"\'');
+    await run('!99');
+    expect(output).toHaveTextContent('zsh: !99: event not found');
+  });
+
+  it('uses a custom shellName in errors and neofetch', async () => {
+    const { output, run } = setup({ shellName: 'bash' });
+    await run('upper');
+    expect(output).toHaveTextContent('bash: command not found: upper');
+    await run('neofetch');
+    expect(output).toHaveTextContent('Shell: bash');
+  });
+
   it('types and runs a demo script, then hands over', async () => {
     render(
       <Terminal

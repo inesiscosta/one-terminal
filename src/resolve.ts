@@ -16,6 +16,7 @@ export type ResolvedTerminalTheme = TerminalTheme & { cursor: CursorOptions };
 export const DEFAULT_PROMPT = '{user}@{cwd}:$ ';
 export const DEFAULT_USERNAME = 'guest';
 export const DEFAULT_HOSTNAME = 'one-terminal';
+export const DEFAULT_SHELL_NAME = 'zsh';
 export const DEFAULT_WELCOME_MESSAGE = '';
 export const DEFAULT_START_PATH = '/';
 export const DEFAULT_THEME: TerminalTheme = PRESET_THEMES['dracula'];

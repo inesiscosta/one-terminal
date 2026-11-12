@@ -15,14 +15,15 @@ shows fake system info. With the `neofetch` prop it becomes a mini CV.
  | .-------------. |   ------------------
  | | >_          | |   OS: one-terminal
  | |             | |   Host: one-terminal
- | |             | |   Shell: one-sh
+ | |             | |   Shell: zsh
  | '-------------' |   Uptime: 3 mins
  '-------. .-------'   Resolution: 1920x1080
      .---' '---.       Commands: 17
      '---------'       Files: 12
 ```
 
-The title line uses the [`username` and `hostname`](/docs/prompt#username-and-hostname) props. Uptime counts
+The title line uses the [`username` and `hostname`](/docs/prompt#username-hostname-and-shell-name) props, and
+the Shell line uses the [`shellName`](/docs/prompt#username-hostname-and-shell-name) prop (`zsh` by default). Uptime counts
 from when the terminal mounted.
 
 ## Your own info
@@ -62,6 +63,47 @@ const logo = String.raw`
 <Callout type="info">
   Use `String.raw` when your art contains backslashes, so they aren't treated as escapes.
 </Callout>
+
+## Everything together
+
+The title line comes from `username` and `hostname`, the default Shell line from `shellName`, and the rest from
+the `neofetch` prop:
+
+```tsx
+const logo = String.raw`
+  /\_/\
+ ( o.o )
+  > ^ <
+`;
+
+<Terminal
+  username="jack"         // jack@portfolio on the title line
+  hostname="portfolio"
+  shellName="bash"        // "Shell: bash" in the default info, and "bash: command not found: ..."
+  neofetch={{
+    logo,
+    info: {
+      Role: 'Software Engineer',
+      Location: 'Lisbon, Portugal',
+      Languages: 'TypeScript, Rust, Go',
+      Contact: "run 'contact'",
+    },
+    colors: false,        // hide the color blocks
+  }}
+/>
+```
+
+```text
+  /\_/\     jack@portfolio
+ ( o.o )    --------------
+  > ^ <     Role: Software Engineer
+            Location: Lisbon, Portugal
+            Languages: TypeScript, Rust, Go
+            Contact: run 'contact'
+```
+
+Passing `info` replaces all the default lines, including Shell. Add `Shell: 'bash'` to `info` yourself if you
+want to keep it.
 
 ## Options
 

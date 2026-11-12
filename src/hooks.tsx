@@ -76,6 +76,8 @@ export type TerminalEngineOptions = {
   extraCommands?: ExtraCommands;
   username?: string;
   hostname?: string;
+  /** Prefix for shell errors, e.g. "zsh" gives "zsh: command not found: foo". */
+  shellName?: string;
   neofetch?: NeofetchConfig;
   /** Color used for highlights such as neofetch labels. */
   accentColor?: string;
@@ -87,6 +89,7 @@ export function useTerminalEngine({
   extraCommands,
   username = 'guest',
   hostname = 'one-terminal',
+  shellName = 'zsh',
   neofetch,
   accentColor,
 }: TerminalEngineOptions) {
@@ -182,7 +185,7 @@ export function useTerminalEngine({
   const run = useCallback(
     (line: string): React.ReactNode => {
       const parsed = parseCommandLine(line);
-      if (parsed.error) return parsed.error;
+      if (parsed.error) return `${shellName}: ${parsed.error}`;
 
       const env: ShellEnv = {
         fs,
@@ -190,6 +193,7 @@ export function useTerminalEngine({
         previousPath: cwdPathPrev,
         username,
         hostname,
+        shellName,
         accentColor,
         neofetch,
         startedAt: startedAtRef.current,
@@ -241,7 +245,7 @@ export function useTerminalEngine({
           }
         } else {
           try {
-            result = runBuiltin(cmd, args, stdin, env) ?? { out: '', err: [`command not found: ${cmd}`] };
+            result = runBuiltin(cmd, args, stdin, env) ?? { out: '', err: [`${shellName}: command not found: ${cmd}`] };
           } catch (err) {
             console.error(`Terminal: error executing "${cmd}"`, err);
             result = { out: '', err: [`${cmd}: unexpected error`] };
@@ -276,6 +280,7 @@ export function useTerminalEngine({
       neofetch,
       path,
       resolvePath,
+      shellName,
       username,
     ],
   );
@@ -294,7 +299,7 @@ export function useTerminalEngine({
       const expansion = expandHistory(typed, previousCommandsRef.current);
 
       if (expansion.error) {
-        setHistory((prev) => [...prev, { in: typed, out: expansion.error, prompt }]);
+        setHistory((prev) => [...prev, { in: typed, out: `${shellName}: ${expansion.error}`, prompt }]);
         resetLine();
         return;
       }
@@ -324,7 +329,7 @@ export function useTerminalEngine({
       }
       resetLine();
     },
-    [input, run, resetLine],
+    [input, run, resetLine, shellName],
   );
 
   const navigateHistory = useCallback(

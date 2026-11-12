@@ -46,7 +46,9 @@ echo 'single $quotes'      # everything inside single quotes is literal
 echo "say \"hi\""          # say "hi"
 ```
 
-An unclosed quote prints `unexpected EOF while looking for matching '"'`.
+An unclosed quote prints `zsh: unexpected EOF while looking for matching '"'`. Shell errors like this one
+and `zsh: command not found: foo` start with the shell name. It's `zsh` by default, and you can change it with the
+[`shellName`](/docs/prompt#username-hostname-and-shell-name) prop, e.g. `shellName="bash"`.
 
 ### Pipes
 
@@ -206,7 +208,7 @@ Prints its arguments separated by spaces. Quotes are removed first, so `echo "a 
 
 ### whoami
 
-Prints the [`username`](/docs/prompt#username-and-hostname) prop (`guest` by default).
+Prints the [`username`](/docs/prompt#username-hostname-and-shell-name) prop (`guest` by default).
 
 ### neofetch
 

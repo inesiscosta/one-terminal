@@ -188,6 +188,11 @@ export type TerminalProps = {
   username: string;
   /** Hostname used by `neofetch` and the `{host}` placeholder. Defaults to "one-terminal". */
   hostname: string;
+  /**
+   * Name of the shell, used to prefix shell errors (e.g. `zsh: command not found: foo`)
+   * and shown by `neofetch`. Defaults to "zsh".
+   */
+  shellName: string;
   /** Customize what `neofetch` shows — great for a mini CV. */
   neofetch?: NeofetchConfig;
   windowChrome: WindowChromeStyle | Partial<TerminalWindowChrome> | [WindowChromeStyle, Partial<TerminalWindowChrome>];

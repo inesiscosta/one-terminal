@@ -19,6 +19,7 @@ Every prop is optional.
 | `prompt` | `string` | `"{user}@{cwd}:$ "` | Prompt template. Supports `{cwd}`, `{path}`, `{user}`, `{host}`. [Guide](/docs/prompt) |
 | `username` | `string` | `"guest"` | Used by `whoami`, `{user}`, `ls -l` and `neofetch` |
 | `hostname` | `string` | `"one-terminal"` | Used by `{host}` and `neofetch` |
+| `shellName` | `string` | `"zsh"` | Prefix for shell errors (`zsh: command not found: foo`), also shown by `neofetch` |
 | `theme` | [`BuiltInTheme`](#builtintheme) \| [`TerminalTheme`](#terminaltheme) \| `[BuiltInTheme, TerminalTheme]` | `"dracula"` | Colors, font and cursor. [Guide](/docs/customization#themes) |
 | `windowChrome` | [`WindowChromeStyle`](#windowchromestyle) \| `Partial<TerminalWindowChrome>` \| `[WindowChromeStyle, Partial<TerminalWindowChrome>]` | `"mac"` | Window frame. [Guide](/docs/customization#window-chrome) |
 | `extraCommands` | [`ExtraCommands`](#extracommands) | — | Custom commands. [Guide](/docs/extra-commands) |
