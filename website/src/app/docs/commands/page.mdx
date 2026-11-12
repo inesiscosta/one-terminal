@@ -1,9 +1,15 @@
 import { Callout } from 'nextra/components'
+import { LiveTerminal } from '@/components/docs/LiveTerminal'
 
 # Commands
 
 One Terminal ships with the commands people instinctively type, and they behave like their Unix
 counterparts. Typing `help` lists them all, and `help <command>` explains one.
+
+<LiveTerminal
+  height={360}
+  hint={<>Try <code>ls -la</code>, <code>tree</code>, <code>grep -ri rust</code>, <code>cat "projects/my notes.txt"</code> and <code>history | tail -3</code>.</>}
+/>
 
 ## Overview
 

@@ -1,4 +1,5 @@
 import { Callout } from 'nextra/components'
+import { ExtraCommandsDemo, EditableFilesDemo } from '@/components/docs/examples'
 
 # Extra Commands
 
@@ -27,6 +28,10 @@ Hello, Jack Turner!
 <Callout type="info">
   Define `extraCommands` outside your component (or memoize it) so the object stays the same between renders.
 </Callout>
+
+These are the examples from this page, running live:
+
+<ExtraCommandsDemo />
 
 ## Command definition
 
@@ -217,7 +222,9 @@ ls: { run: () => 'Nice try. Use the GUI. 😄' },
 ## Editable files
 
 `fileStructure` is a normal prop, so commands can change it. Keep the files in React state and update them from
-your commands. Here are `mkdir`, `touch`, `rm` and `mv`:
+your commands. Here are `mkdir`, `touch`, `rm` and `mv`, running live:
+
+<EditableFilesDemo />
 
 ```tsx
 import { useMemo, useState } from 'react';

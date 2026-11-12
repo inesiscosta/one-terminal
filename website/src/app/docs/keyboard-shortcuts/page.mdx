@@ -1,8 +1,12 @@
 import { Callout } from 'nextra/components'
+import { LiveTerminal } from '@/components/docs/LiveTerminal'
 
 # Keyboard Shortcuts
 
-The terminal supports the bash/readline shortcuts people's fingers already know. Click the terminal to focus it.
+The terminal supports the bash/readline shortcuts people's fingers already know. Click the terminal to focus it,
+and try them here:
+
+<LiveTerminal hint={<>Run a few commands, then press <code>Ctrl+R</code> and type part of one. Or type a long line and use <code>Ctrl+A</code>, <code>Alt+F</code>, <code>Ctrl+W</code> and <code>Ctrl+Y</code>.</>} />
 
 ## Completion and history
 

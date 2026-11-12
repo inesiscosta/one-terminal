@@ -1,4 +1,5 @@
 import { Callout } from 'nextra/components'
+import { LiveTerminal } from '@/components/docs/LiveTerminal'
 
 # Prompt & Title Bar
 
@@ -11,6 +12,14 @@ The `prompt` prop is a template. The default is `{user}@{cwd}:$ `, which looks l
 <Terminal prompt="❯ " />                       // ❯
 <Terminal prompt="[{cwd}] → " />               // [projects] →
 ```
+
+<LiveTerminal
+  username="jack"
+  hostname="portfolio"
+  prompt="{user}@{host}:{path}$ "
+  windowChrome={['mac', { titleBarText: '{user}@{host}: {path}' }]}
+  hint={<>Run <code>cd projects</code> and <code>cd ..</code> and watch the prompt and the title change.</>}
+/>
 
 ### Placeholders
 

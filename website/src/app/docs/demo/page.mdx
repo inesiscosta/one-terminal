@@ -1,4 +1,5 @@
 import { Callout } from 'nextra/components'
+import { DemoModeDemo, TypewriterDemo } from '@/components/docs/examples'
 
 # Demo Mode
 
@@ -15,7 +16,9 @@ anyone touches it.
 />
 ```
 
-Each line is typed character by character, run, and followed by a pause.
+Each line is typed character by character, run, and followed by a pause:
+
+<DemoModeDemo />
 
 ## Options
 
@@ -62,6 +65,8 @@ demo={{
 
 `mode: "type-writer"` types each line, waits, then deletes it, without running anything. Use it for rotating
 taglines:
+
+<TypewriterDemo />
 
 ```tsx
 <Terminal
