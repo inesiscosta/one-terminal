@@ -36,6 +36,8 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      # The website uses the library from this repo, so build it first
+      - run: pnpm build
       - run: pnpm --dir website lint
       - run: pnpm --dir website exec tsc --noEmit
       # Builds the static site and the Pagefind search index (fails if the index is missing)
