@@ -8,7 +8,7 @@ easter eggs.
 
 ## Features
 
-- **Zero dependencies.** Just React 18+. Works in the Next.js App Router out of the box.
+- **Zero dependencies.** About 16 KB gzipped, just React 18+. Works in the Next.js App Router out of the box.
 - **Feels like a real shell.** Quotes, pipes, flags, `~` and relative paths, tab completion, `Ctrl+R` history
   search, `!!` and friends, and the readline shortcuts (`Ctrl+A/E/U/K/W/Y`…).
 - **Useful built-ins.** `ls`, `cd`, `pwd`, `tree`, `cat`, `grep`, `head`, `tail`, `wc`, `nl`, `echo`, `whoami`,

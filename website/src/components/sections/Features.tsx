@@ -30,7 +30,7 @@ const features = [
   {
     icon: <Zap className="w-6 h-6" />,
     title: 'Lightweight & Fast',
-    description: 'Zero dependencies, tree-shakeable, and optimized for performance.',
+    description: 'Zero dependencies and about 16 KB gzipped. All you need is React 18 or newer.',
   },
 ];
 
