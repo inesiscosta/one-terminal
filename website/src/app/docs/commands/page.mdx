@@ -200,6 +200,10 @@ wc [-lwc] [file...]
 Counts lines (`-l`), words (`-w`) and characters (`-c`). With no flags it shows all three, and with several
 files it adds a total.
 
+Output in this terminal never ends with a trailing newline, so `wc -l` counts lines rather than newline
+characters. A three-line file counts as `3` whether or not its `content` ends with `\n`, and
+`cat skills.txt | grep -i rust | wc -l` matches what bash would print.
+
 ### nl
 
 Numbers the non-empty lines of files or piped input.
