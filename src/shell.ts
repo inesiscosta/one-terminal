@@ -40,7 +40,8 @@ export function parseCommandLine(line: string): ParsedLine {
       inToken = true;
     } else if (ch === '\\') {
       inToken = true;
-      if (i + 1 < line.length) token += line[++i];
+      // A trailing backslash has nothing to escape, so it stays literal (like `bash -c 'echo a\'`)
+      token += i + 1 < line.length ? line[++i] : '\\';
     } else if (/\s/.test(ch)) {
       endToken();
     } else if (ch === '|') {

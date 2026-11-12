@@ -19,6 +19,7 @@ describe('parseCommandLine', () => {
     expect(words('cat my\\ file.txt')).toEqual([['cat', 'my file.txt']]);
     expect(words('echo "say \\"hi\\""')).toEqual([['echo', 'say "hi"']]);
     expect(words("echo 'no \\escape'")).toEqual([['echo', 'no \\escape']]);
+    expect(words('echo foo\\')).toEqual([['echo', 'foo\\']]);
   });
 
   it('joins adjacent quoted parts into one word', () => {
