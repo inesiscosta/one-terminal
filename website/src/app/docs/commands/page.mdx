@@ -61,7 +61,8 @@ grep -r TODO | head
 ```
 
 Commands that read files (`cat`, `grep`, `head`, `tail`, `wc`, `nl`) read the piped text when you don't give
-them a file. Your [extra commands](/docs/extra-commands#reading-piped-input) can read it too.
+them a file. As in bash, each part of a pipeline runs on its own, so `cd projects | cat` doesn't change
+directory, and `clear` or `history -c` only take effect when run by themselves. Your [extra commands](/docs/extra-commands#reading-piped-input) can read it too.
 
 ### Flags
 

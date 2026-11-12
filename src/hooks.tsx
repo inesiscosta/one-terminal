@@ -187,6 +187,10 @@ export function useTerminalEngine({
       const parsed = parseCommandLine(line);
       if (parsed.error) return `${shellName}: ${parsed.error}`;
 
+      // Like bash, each stage of a pipeline runs in a "subshell": cd, clear and history -c
+      // only change the session when they run on their own
+      const inPipeline = parsed.stages.length > 1;
+
       const env: ShellEnv = {
         fs,
         path,
@@ -203,12 +207,15 @@ export function useTerminalEngine({
         resolvePath,
         getNodeAt,
         changeDir: (abs) => {
+          if (inPipeline) return;
           setCwdPathPrev(path);
           setPath(abs);
         },
-        clearScreen,
+        clearScreen: () => {
+          if (!inPipeline) clearScreen();
+        },
         clearHistory: () => {
-          previousCommandsRef.current = [];
+          if (!inPipeline) previousCommandsRef.current = [];
         },
         startBusy: (ms) => {
           if (busyTimerRef.current !== null) clearTimeout(busyTimerRef.current);

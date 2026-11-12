@@ -125,6 +125,17 @@ describe('<Terminal />', () => {
     expect(input).toHaveAccessibleName('Terminal input, guest@~:$');
   });
 
+  it('runs pipeline stages without changing the session, like subshells', async () => {
+    const { input, output, run } = setup();
+    await run('cd projects | cat');
+    expect(input).toHaveAccessibleName('Terminal input, guest@~:$');
+    await run('clear | cat');
+    expect(output).toHaveTextContent('cd projects | cat');
+    await run('history -c | cat');
+    await run('history');
+    expect(output).toHaveTextContent('1 cd projects | cat');
+  });
+
   it('prefixes shell errors with the shell name', async () => {
     const { output, run } = setup();
     await run('upper');
