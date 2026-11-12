@@ -149,15 +149,30 @@ export const WindowChrome: React.FC<{ chrome: TerminalWindowChrome; title: strin
   const handleMouseLeave = () => setHoveredControl(null);
 
   const controls = (['close', 'min', 'max'] as ControlKind[]).map((kind) => {
-    // Icons
-    let Icon: React.ReactNode = null;
-    if (chrome.style === 'mac') {
-      Icon = kind === 'close' ? <MacCloseIcon /> : kind === 'min' ? <MacMinIcon /> : <MacMaxIcon />;
-    } else if (chrome.style === 'windows') {
-      Icon = kind === 'min' ? <WinMinIcon /> : kind === 'max' ? <WinMaxIcon /> : <WinCloseIcon />;
-    } else {
-      Icon = kind === 'min' ? <LinuxMinIcon /> : kind === 'max' ? <LinuxMaxIcon /> : <LinuxCloseIcon />;
-    }
+    const Icon =
+      chrome.style === 'mac' ? (
+        kind === 'close' ? (
+          <MacCloseIcon />
+        ) : kind === 'min' ? (
+          <MacMinIcon />
+        ) : (
+          <MacMaxIcon />
+        )
+      ) : chrome.style === 'windows' ? (
+        kind === 'min' ? (
+          <WinMinIcon />
+        ) : kind === 'max' ? (
+          <WinMaxIcon />
+        ) : (
+          <WinCloseIcon />
+        )
+      ) : kind === 'min' ? (
+        <LinuxMinIcon />
+      ) : kind === 'max' ? (
+        <LinuxMaxIcon />
+      ) : (
+        <LinuxCloseIcon />
+      );
 
     // Windows Logic
     if (chrome.style === 'windows') {

@@ -172,8 +172,6 @@ export function expandHistory(line: string, commands: string[]): { line: string;
 
     const rest = line.slice(i + 1);
     let replacement: string | undefined;
-    let consumed = 0;
-    let token = '';
 
     const ref = /^(!|\$|\^|-?\d+|[A-Za-z_./][^\s!"'|]*)/.exec(rest);
     if (!ref) {
@@ -181,8 +179,8 @@ export function expandHistory(line: string, commands: string[]): { line: string;
       continue;
     }
 
-    token = `!${ref[1]}`;
-    consumed = ref[1].length;
+    const token = `!${ref[1]}`;
+    const consumed = ref[1].length;
 
     if (ref[1] === '!') replacement = last;
     else if (ref[1] === '$') replacement = last === undefined ? undefined : lastArgument(last);
