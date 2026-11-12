@@ -107,7 +107,7 @@ Your own commands appear under **More commands** using their `description` and `
 ### ls
 
 ```bash
-ls [-aAlF1] [path...]
+ls [-aAlhF1] [path...]
 ```
 
 | Flag | Effect |
@@ -115,6 +115,7 @@ ls [-aAlF1] [path...]
 | `-a` | Include hidden entries, plus `.` and `..` |
 | `-A` | Include hidden entries |
 | `-l` | Long listing (permissions, owner, size, link targets) |
+| `-h` | With `-l`, human-readable sizes (`4.0K` instead of `4096`) |
 | `-1` | One entry per line |
 | `-F` | Append `/` to directories and `@` to links |
 

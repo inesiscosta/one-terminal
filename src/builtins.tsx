@@ -41,7 +41,7 @@ export const BUILTIN_HELP: Record<string, BuiltinHelp> = {
     usage: 'ls [-al] [path...]',
     description: 'List directory contents',
     details:
-      '  -a   Include hidden entries (and . ..)\n  -A   Include hidden entries\n  -l   Long listing\n  -1   One entry per line\n  -F   Mark directories with /',
+      '  -a   Include hidden entries (and . ..)\n  -A   Include hidden entries\n  -l   Long listing\n  -h   With -l, human-readable sizes (4.0K)\n  -1   One entry per line\n  -F   Mark directories with /',
     scope: 'any',
   },
   cd: {
@@ -173,6 +173,24 @@ function byteLength(text: string): number {
   return new TextEncoder().encode(text).length;
 }
 
+/** Sizes like GNU `ls -h`: 37, 4.0K, 13K, 2.1M (always rounded up). */
+export function humanSize(bytes: number): string {
+  const units = ['K', 'M', 'G', 'T'];
+  let value = bytes;
+  let unit = -1;
+  while (value >= 1024 && unit < units.length - 1) {
+    value /= 1024;
+    unit++;
+  }
+  if (unit < 0) return String(bytes);
+  if (value < 10) {
+    const rounded = Math.ceil(value * 10) / 10;
+    // 9.95K rounds up to 10K, which is shown without a decimal
+    return rounded < 10 ? `${rounded.toFixed(1)}${units[unit]}` : `10${units[unit]}`;
+  }
+  return `${Math.ceil(value)}${units[unit]}`;
+}
+
 type Source = { name: string; text: string };
 
 /** Reads file operands, or stdin when there are none. */
@@ -285,15 +303,14 @@ function ls(args: string[], env: ShellEnv): ExecResult {
 
   const format = (items: [string, FSNode][]) => {
     if (flags.has('l')) {
-      const sizes = items.map(([, node]) =>
-        String(
-          isDirectory(node)
-            ? 4096
-            : isTextFile(node)
-              ? byteLength(node.content)
-              : (node as FileNode & { href: string }).href.length,
-        ),
-      );
+      const sizes = items.map(([, node]) => {
+        const bytes = isDirectory(node)
+          ? 4096
+          : isTextFile(node)
+            ? byteLength(node.content)
+            : (node as FileNode & { href: string }).href.length;
+        return flags.has('h') ? humanSize(bytes) : String(bytes);
+      });
       const width = Math.max(0, ...sizes.map((s) => s.length));
       return items
         .map(([name, node], i) => {

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { runBuiltin, type ShellEnv } from './builtins';
+import { humanSize, runBuiltin, type ShellEnv } from './builtins';
 import { parseCommandLine } from './shell';
 import type { DirectoryNode } from './types';
 
@@ -96,6 +96,19 @@ describe('ls', () => {
       'lrwxrwxrwx 1 ines ines 18 gh -> https://github.com\n-rw-r--r-- 1 ines ines 19 swate.md',
     );
     expect(sh('ls -F').out).toContain('projects/');
+  });
+
+  it('shows human-readable sizes with -lh', () => {
+    expect(sh('ls -lh').out).toContain('4.0K empty');
+    expect(sh('ls -lh skills.txt').out).toContain(' 37 skills.txt');
+    expect([1023, 1024, 1536, 10239, 12345, 5 * 1024 ** 2].map(humanSize)).toEqual([
+      '1023',
+      '1.0K',
+      '1.5K',
+      '10K',
+      '13K',
+      '5.0M',
+    ]);
   });
 
   it('resolves ~, .. and quoted paths', () => {
