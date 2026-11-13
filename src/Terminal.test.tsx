@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import '@testing-library/jest-dom/vitest';
 import React from 'react';
-import { cleanup, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Terminal } from './index';
@@ -134,6 +134,71 @@ describe('<Terminal />', () => {
     await run('history -c | cat');
     await run('history');
     expect(output).toHaveTextContent('1 cd projects | cat');
+  });
+
+  describe('async commands', () => {
+    function deferred<T>() {
+      let resolve!: (value: T) => void;
+      let reject!: (error: unknown) => void;
+      const promise = new Promise<T>((res, rej) => {
+        resolve = res;
+        reject = rej;
+      });
+      return { promise, resolve, reject };
+    }
+
+    it('shows the output when the promise resolves, hiding the prompt meanwhile', async () => {
+      const pending = deferred<string>();
+      const { input, output, run } = setup({ extraCommands: { stars: { run: () => pending.promise } } });
+      await run('stars');
+      expect(output).toHaveTextContent('guest@~:$ stars');
+      expect(screen.queryByText('guest@~:$', { selector: '[aria-hidden]' })).not.toBeInTheDocument();
+      await act(async () => pending.resolve('42 stars'));
+      expect(output).toHaveTextContent('stars42 stars');
+      expect(input).toHaveAccessibleName('Terminal input, guest@~:$');
+    });
+
+    it('aborts with Ctrl+C and ignores a late result', async () => {
+      const pending = deferred<string>();
+      let signal: AbortSignal | undefined;
+      const { user, output, run } = setup({
+        extraCommands: {
+          slow: {
+            run: (_args, ctx) => {
+              signal = ctx.signal;
+              return pending.promise;
+            },
+          },
+        },
+      });
+      await run('slow');
+      await user.keyboard('{Control>}c{/Control}');
+      expect(signal?.aborted).toBe(true);
+      expect(output).toHaveTextContent('slow^C');
+      await act(async () => pending.resolve('too late'));
+      expect(output).not.toHaveTextContent('too late');
+    });
+
+    it('works inside pipelines', async () => {
+      const { output, run } = setup({
+        extraCommands: {
+          later: { run: async (args) => args.join(' ') },
+          shout: { run: async (_args, ctx) => ctx.stdin?.toUpperCase() },
+        },
+      });
+      await run('later hello async world | shout | wc -w');
+      await waitFor(() => expect(output).toHaveTextContent(/wc -w\s+3$/));
+      await run('cat about.txt | shout');
+      await waitFor(() => expect(output).toHaveTextContent('HELLO THERE'));
+    });
+
+    it('reports a rejected promise', async () => {
+      vi.spyOn(console, 'error').mockImplementation(() => {});
+      const { output, run } = setup({ extraCommands: { broken: { run: () => Promise.reject(new Error('boom')) } } });
+      await run('broken');
+      await waitFor(() => expect(output).toHaveTextContent('error: executing broken'));
+      vi.restoreAllMocks();
+    });
   });
 
   it('prefixes shell errors with the shell name', async () => {

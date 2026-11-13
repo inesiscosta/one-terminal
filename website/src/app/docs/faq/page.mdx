@@ -58,8 +58,8 @@ many files, use `grep -r`.
 
 ## Can a custom command be async?
 
-`run` must return its output synchronously. You can still kick off async work (like `fetch` or `window.open`) and
-return a message right away.
+Yes. Return a Promise or use an `async` function, and the output appears when it resolves. `Ctrl+C` cancels it
+through `ctx.signal`. See [Async commands](/docs/extra-commands#async-commands).
 
 ## How do I hide a command from `help`?
 

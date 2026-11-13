@@ -64,6 +64,12 @@ function findHistoryMatch(
   return null;
 }
 
+type MaybePromise<T> = T | Promise<T>;
+
+function isPromise<T>(value: unknown): value is Promise<T> {
+  return !!value && typeof (value as { then?: unknown }).then === 'function';
+}
+
 function toExecResult(value: React.ReactNode): ExecResult {
   if (value === null || value === undefined || typeof value === 'boolean') return { out: '', err: [] };
   if (typeof value === 'string' || typeof value === 'number') return { out: String(value), err: [] };
@@ -104,16 +110,21 @@ export function useTerminalEngine({
   const [clearCount, setClearCount] = useState(0);
 
   const previousCommandsRef = useRef<string[]>([]);
-  const busyTimerRef = useRef<number | null>(null);
+  // Cancels whatever keeps the terminal busy (a sleep timer or an async command)
+  const cancelBusyRef = useRef<(() => void) | null>(null);
+  // History entry that gets "^C" when the busy command is interrupted
+  const busyEntryRef = useRef<number | null>(null);
+  const entryIdRef = useRef(0);
   const clearedRef = useRef(false);
   const startedAtRef = useRef(Date.now());
 
-  useEffect(
-    () => () => {
-      if (busyTimerRef.current !== null) clearTimeout(busyTimerRef.current);
-    },
-    [],
-  );
+  useEffect(() => () => cancelBusyRef.current?.(), []);
+
+  const finishBusy = useCallback(() => {
+    cancelBusyRef.current = null;
+    busyEntryRef.current = null;
+    setBusy(false);
+  }, []);
 
   const cwdNode = useMemo<DirectoryNode | null>(() => {
     const segments = normalizePath(path).split('/').filter(Boolean);
@@ -182,8 +193,9 @@ export function useTerminalEngine({
   }, []);
 
   /** Runs a full command line (with pipes) and returns what to print. */
+  /** Runs a full command line (with pipes). Async commands make the result a Promise. */
   const run = useCallback(
-    (line: string): React.ReactNode => {
+    (line: string, signal: AbortSignal): MaybePromise<React.ReactNode> => {
       const parsed = parseCommandLine(line);
       if (parsed.error) return `${shellName}: ${parsed.error}`;
 
@@ -218,61 +230,77 @@ export function useTerminalEngine({
           if (!inPipeline) previousCommandsRef.current = [];
         },
         startBusy: (ms) => {
-          if (busyTimerRef.current !== null) clearTimeout(busyTimerRef.current);
+          cancelBusyRef.current?.();
           setBusy(true);
-          busyTimerRef.current = window.setTimeout(() => {
-            busyTimerRef.current = null;
-            setBusy(false);
-          }, ms);
+          const timer = window.setTimeout(finishBusy, ms);
+          cancelBusyRef.current = () => clearTimeout(timer);
         },
       };
 
-      const errors: string[] = [];
-      let stdin: string | undefined;
-      let result: ExecResult = { out: '', err: [] };
+      const failed = (cmd: string, err: unknown, message: string): ExecResult => {
+        console.error(`Terminal: error executing "${cmd}"`, err);
+        return { out: '', err: [message] };
+      };
 
-      for (const [cmd, ...args] of parsed.stages) {
+      const runStage = (cmd: string, args: string[], stdin: string | undefined): MaybePromise<ExecResult> => {
         const extraDef = extraCommands?.[cmd];
         if (extraDef) {
           try {
-            result = toExecResult(
-              extraDef.run(args, {
-                getNodeAt: (p: string) => getNodeAt(resolvePath(p)) ?? null,
-                resolvePath,
-                cwd: cwdNode,
-                path,
-                commands: commandInfos,
-                history: [...previousCommandsRef.current],
-                stdin,
-              }),
-            );
+            const value = extraDef.run(args, {
+              getNodeAt: (p: string) => getNodeAt(resolvePath(p)) ?? null,
+              resolvePath,
+              cwd: cwdNode,
+              path,
+              commands: commandInfos,
+              history: [...previousCommandsRef.current],
+              stdin,
+              signal,
+            });
+            if (isPromise<React.ReactNode>(value)) {
+              return value.then(toExecResult, (err) => failed(cmd, err, `error: executing ${cmd}`));
+            }
+            return toExecResult(value);
           } catch (err) {
-            console.error(`Terminal: error executing extra command "${cmd}"`, err);
-            result = { out: '', err: [`error: executing ${cmd}`] };
-          }
-        } else {
-          try {
-            result = runBuiltin(cmd, args, stdin, env) ?? { out: '', err: [`${shellName}: command not found: ${cmd}`] };
-          } catch (err) {
-            console.error(`Terminal: error executing "${cmd}"`, err);
-            result = { out: '', err: [`${cmd}: unexpected error`] };
+            return failed(cmd, err, `error: executing ${cmd}`);
           }
         }
-        errors.push(...result.err);
-        stdin = result.out;
-      }
+        try {
+          return runBuiltin(cmd, args, stdin, env) ?? { out: '', err: [`${shellName}: command not found: ${cmd}`] };
+        } catch (err) {
+          return failed(cmd, err, `${cmd}: unexpected error`);
+        }
+      };
 
-      const errorText = errors.join('\n');
-      const output = result.node ?? result.out;
-      if (!errorText) return output === '' ? undefined : output;
-      if (output === '' || output == null) return errorText;
-      return (
-        <>
-          {errorText}
-          {'\n'}
-          {output}
-        </>
-      );
+      // Runs the stages in order, feeding each one's text into the next. Stays synchronous
+      // unless a stage returns a Promise.
+      const errors: string[] = [];
+      const runFrom = (index: number, stdin: string | undefined, last: ExecResult): MaybePromise<ExecResult> => {
+        if (index >= parsed.stages.length) return last;
+        const [cmd, ...args] = parsed.stages[index];
+        const next = (result: ExecResult) => {
+          errors.push(...result.err);
+          return runFrom(index + 1, result.out, result);
+        };
+        const result = runStage(cmd, args, stdin);
+        return isPromise<ExecResult>(result) ? result.then(next) : next(result);
+      };
+
+      const format = (result: ExecResult): React.ReactNode => {
+        const errorText = errors.join('\n');
+        const output = result.node ?? result.out;
+        if (!errorText) return output === '' ? undefined : output;
+        if (output === '' || output == null) return errorText;
+        return (
+          <>
+            {errorText}
+            {'\n'}
+            {output}
+          </>
+        );
+      };
+
+      const final = runFrom(0, undefined, { out: '', err: [] });
+      return isPromise<ExecResult>(final) ? final.then(format) : format(final);
     },
     [
       accentColor,
@@ -281,6 +309,7 @@ export function useTerminalEngine({
       cwdNode,
       cwdPathPrev,
       extraCommands,
+      finishBusy,
       fs,
       getNodeAt,
       hostname,
@@ -314,29 +343,43 @@ export function useTerminalEngine({
       const line = expansion.line;
       if (line) previousCommandsRef.current.push(line);
 
+      const id = ++entryIdRef.current;
+      busyEntryRef.current = id;
       clearedRef.current = false;
-      let out = line ? run(line) : undefined;
+      const controller = new AbortController();
+      const result = line ? run(line, controller.signal) : undefined;
 
-      if (expansion.expanded) {
-        // Like bash, echo the expanded command before its output
-        out =
-          out == null || out === '' ? (
-            line
-          ) : (
-            <>
-              {line}
-              {'\n'}
-              {out}
-            </>
-          );
-      }
+      // Like bash, echo the expanded command before its output
+      const withEcho = (out: React.ReactNode): React.ReactNode =>
+        !expansion.expanded ? (
+          out
+        ) : out == null || out === '' ? (
+          line
+        ) : (
+          <>
+            {line}
+            {'\n'}
+            {out}
+          </>
+        );
 
-      if (!clearedRef.current) {
-        setHistory((prev) => [...prev, { in: typed, out, prompt }]);
+      if (isPromise<React.ReactNode>(result)) {
+        // Async command: show the line now, the output when it arrives. Ctrl+C aborts it.
+        setHistory((prev) => [...prev, { id, in: typed, out: withEcho(undefined), prompt }]);
+        cancelBusyRef.current?.();
+        setBusy(true);
+        cancelBusyRef.current = () => controller.abort();
+        result.then((out) => {
+          if (controller.signal.aborted) return;
+          finishBusy();
+          setHistory((prev) => prev.map((entry) => (entry.id === id ? { ...entry, out: withEcho(out) } : entry)));
+        });
+      } else if (!clearedRef.current) {
+        setHistory((prev) => [...prev, { id, in: typed, out: withEcho(result), prompt }]);
       }
       resetLine();
     },
-    [input, run, resetLine, shellName],
+    [finishBusy, input, run, resetLine, shellName],
   );
 
   const navigateHistory = useCallback(
@@ -542,14 +585,27 @@ export function useTerminalEngine({
   const interrupt = useCallback(
     (prompt?: string) => {
       if (busy) {
-        if (busyTimerRef.current !== null) clearTimeout(busyTimerRef.current);
-        busyTimerRef.current = null;
-        setBusy(false);
-        setHistory((prev) => {
-          if (!prev.length) return prev;
-          const last = prev[prev.length - 1];
-          return [...prev.slice(0, -1), { ...last, out: '^C' }];
-        });
+        const id = busyEntryRef.current;
+        cancelBusyRef.current?.();
+        finishBusy();
+        setHistory((prev) =>
+          prev.map((entry) =>
+            entry.id === id
+              ? {
+                  ...entry,
+                  out:
+                    entry.out == null || entry.out === '' ? (
+                      '^C'
+                    ) : (
+                      <>
+                        {entry.out}
+                        {'\n'}^C
+                      </>
+                    ),
+                }
+              : entry,
+          ),
+        );
         return;
       }
 
@@ -557,7 +613,7 @@ export function useTerminalEngine({
       setHistory((prev) => [...prev, { in: `${line}^C`, out: undefined, prompt }]);
       resetLine();
     },
-    [busy, input, resetLine, search, searchMatch],
+    [busy, finishBusy, input, resetLine, search, searchMatch],
   );
 
   return {

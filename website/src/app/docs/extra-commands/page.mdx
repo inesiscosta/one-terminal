@@ -37,7 +37,7 @@ These are the examples from this page, running live:
 
 ```ts
 type ExtraCommandDefinition = {
-  run: (args: string[], ctx: ExtraCommandContext) => React.ReactNode;
+  run: (args: string[], ctx: ExtraCommandContext) => React.ReactNode | Promise<React.ReactNode>;
   description?: string; // one line in `help`
   usage?: string;       // e.g. "projects [name]" (defaults to the name)
   details?: string;     // extra text for `help <command>`
@@ -94,10 +94,34 @@ contact: {
 
 Return a string whenever you can, so the output can be piped into `grep`, `head`, `wc`…
 
-<Callout type="warning">
-  `run` must be synchronous: a returned Promise isn't awaited. Side effects such as `window.open` are fine.
-  If `run` throws, the terminal prints `error: executing <name>` and logs the error to the console.
-</Callout>
+If `run` throws (or its Promise rejects), the terminal prints `error: executing <name>` and logs the error to
+the console.
+
+## Async commands
+
+Return a Promise (or make `run` an `async` function) to load data. While it's pending, the prompt disappears
+like a real running command. The output appears when the Promise resolves, and `Ctrl+C` cancels it.
+
+```tsx
+stars: {
+  description: 'Show GitHub stars',
+  usage: 'stars <owner/repo>',
+  run: async (args, ctx) => {
+    const repo = args[0] ?? 'inesiscosta/one-terminal';
+    const res = await fetch(`https://api.github.com/repos/${repo}`, { signal: ctx.signal });
+    if (!res.ok) return `stars: ${repo}: not found`;
+    const { stargazers_count } = await res.json();
+    return `★ ${stargazers_count} stars on ${repo}`;
+  },
+},
+```
+
+- **Cancelling:** `Ctrl+C` prints `^C`, aborts `ctx.signal` and ignores whatever the Promise resolves to later.
+  Pass the signal to `fetch` (or listen for its `abort` event) so the work actually stops.
+- **Pipes:** async commands work anywhere in a pipeline, e.g. `stars | grep stars`. Later stages wait for them.
+- **Output** arrives all at once when the Promise resolves; there's no streaming yet.
+
+Try the `deploy` command in the demo above: it takes two seconds, and `Ctrl+C` cancels it.
 
 ## The context object
 
@@ -112,6 +136,7 @@ type ExtraCommandContext = {
   commands: CommandInfo[];                       // every command: { name, usage, description, builtin }
   history: string[];                             // previously run commands, oldest first
   stdin?: string;                                // text piped in, if any
+  signal: AbortSignal;                           // aborted when the user presses Ctrl+C
 };
 ```
 

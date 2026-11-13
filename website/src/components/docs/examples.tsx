@@ -26,6 +26,14 @@ const extraCommands: ExtraCommands = {
       </span>
     ),
   },
+  deploy: {
+    description: 'Pretend to deploy (async, Ctrl+C cancels)',
+    run: (_args, ctx) =>
+      new Promise<string>((resolve) => {
+        const timer = setTimeout(() => resolve('✔ Deployed to production in 2.0s'), 2000);
+        ctx.signal.addEventListener('abort', () => clearTimeout(timer));
+      }),
+  },
   sudo: {
     hidden: true,
     run: (args) => `${args.join(' ') || 'that'}? Nice try. This incident will be reported.`,
@@ -39,7 +47,8 @@ export function ExtraCommandsDemo() {
       hint={
         <>
           Try <code>hello &quot;Jack Turner&quot;</code>, <code>cat about.md | upper</code>, <code>contact</code>,{' '}
-          <code>help</code> and the hidden <code>sudo rm -rf /</code>.
+          <code>deploy</code> (async, try <code>Ctrl+C</code>), <code>help</code> and the hidden{' '}
+          <code>sudo rm -rf /</code>.
         </>
       }
     />

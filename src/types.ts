@@ -122,10 +122,16 @@ export type ExtraCommandContext = {
   history: string[];
   /** Text piped into the command (e.g. `cat file | mycommand`), if any. */
   stdin?: string;
+  /** Aborted when the user presses Ctrl+C. Pass it to `fetch` and other async work. */
+  signal: AbortSignal;
 };
 
 export type ExtraCommandDefinition = {
-  run: (args: string[], ctx: ExtraCommandContext) => React.ReactNode;
+  /**
+   * Runs the command. Return text or React elements, or a Promise of them for async work:
+   * the prompt waits until it resolves, and Ctrl+C cancels it (see `ctx.signal`).
+   */
+  run: (args: string[], ctx: ExtraCommandContext) => React.ReactNode | Promise<React.ReactNode>;
   completion?: ExtraCommandCompletionConfig;
   /** One-line description shown by `help`. */
   description?: string;
@@ -161,6 +167,8 @@ export type HistorySearchState = {
 };
 
 export type HistoryEntry = {
+  /** Identifies entries whose output arrives later (async commands). */
+  id?: number;
   in: string;
   out?: React.ReactNode;
   prompt?: string;

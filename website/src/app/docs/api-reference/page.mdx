@@ -155,7 +155,7 @@ type ExtraCommands = Record<string, ExtraCommandDefinition>;
 
 ```ts
 type ExtraCommandDefinition = {
-  run: (args: string[], ctx: ExtraCommandContext) => React.ReactNode;
+  run: (args: string[], ctx: ExtraCommandContext) => React.ReactNode | Promise<React.ReactNode>;
   description?: string;
   usage?: string;
   details?: string;
@@ -180,6 +180,7 @@ type ExtraCommandContext = {
   commands: CommandInfo[];
   history: string[];
   stdin?: string;
+  signal: AbortSignal; // aborted on Ctrl+C
 };
 ```
 
