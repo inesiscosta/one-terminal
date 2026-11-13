@@ -4,7 +4,7 @@ const features = [
   {
     icon: <Palette className="w-6 h-6" />,
     title: 'Fully Themeable',
-    description: 'Customize colors, fonts, and styles to match your brand. Supports custom CSS variables.',
+    description: 'Five built-in themes, or set your own colors, fonts and cursor to match your site.',
   },
   {
     icon: <Command className="w-6 h-6" />,
