@@ -4,6 +4,7 @@ import Commands from '@/components/sections/Commands';
 import Cutomizable from '@/components/sections/CustomizableSection';
 import License from '@/components/sections/OpenSource';
 import QuickStart from '@/components/sections/QuickStart';
+import Showcase from '@/components/sections/Showcase';
 // release-please bumps this when a release is merged, so it always matches the latest published version
 import pkg from '../../../package.json';
 
@@ -14,6 +15,7 @@ export default function Home() {
       <Features />
       <Commands />
       <Cutomizable />
+      <Showcase />
       <License />
       <QuickStart />
 

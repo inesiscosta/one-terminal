@@ -13,6 +13,7 @@ export default {
   'extra-commands': 'Extra Commands',
   demo: 'Demo Mode',
   'portfolio-example': 'Portfolio Example',
+  showcase: 'Showcase',
   '-- Reference': {
     type: 'separator',
     title: 'Reference',
