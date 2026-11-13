@@ -3,7 +3,7 @@ import { Terminal, DirectoryNode } from 'one-terminal';
 import { ArrowRight, Sparkles, Package } from 'lucide-react';
 import { Button } from '@/components/Button';
 
-export default function HeroSection({ version = '1.0.0' }: { version?: string }) {
+export default function HeroSection({ version }: { version: string }) {
   const vfs: DirectoryNode = {
     kind: 'directory',
     entries: {
@@ -32,9 +32,13 @@ export default function HeroSection({ version = '1.0.0' }: { version?: string })
                   'todo.txt': {
                     kind: 'file',
                     fileType: 'text',
-                    content: ['# TODO', '', '- Polish terminal demo', '- Add more commands', '- Ship v1.0.0 🚀'].join(
-                      '\n',
-                    ),
+                    content: [
+                      '# TODO',
+                      '',
+                      '- Polish terminal demo',
+                      '- Add more commands',
+                      `- Ship v${version} 🚀`,
+                    ].join('\n'),
                   },
                 },
               },
@@ -154,7 +158,7 @@ export default function HeroSection({ version = '1.0.0' }: { version?: string })
                   {
                     theme: 'dracula',
                     demoMode: true,
-                    version: '0.1.0',
+                    version,
                   },
                   null,
                   2,

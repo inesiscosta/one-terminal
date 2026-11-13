@@ -4,21 +4,13 @@ import Commands from '@/components/sections/Commands';
 import Cutomizable from '@/components/sections/CustomizableSection';
 import License from '@/components/sections/OpenSource';
 import QuickStart from '@/components/sections/QuickStart';
+// release-please bumps this when a release is merged, so it always matches the latest published version
+import pkg from '../../../package.json';
 
-export default async function Home() {
-  let version = '1.0.0';
-  try {
-    const data = await fetch('https://registry.npmjs.org/-/package/one-terminal/dist-tags', {
-      next: { revalidate: 3600 },
-    }).then((res) => res.json());
-    version = data.latest;
-  } catch (e) {
-    console.error('Failed to fetch version', e);
-  }
-
+export default function Home() {
   return (
     <main className="min-h-screen bg-background">
-      <Hero version={version} />
+      <Hero version={pkg.version} />
       <Features />
       <Commands />
       <Cutomizable />
