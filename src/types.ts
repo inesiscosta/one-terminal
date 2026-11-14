@@ -126,12 +126,22 @@ export type ExtraCommandContext = {
   signal: AbortSignal;
 };
 
+/** Output plus an explicit exit status, for commands that need to report failure. */
+export type CommandResult = {
+  output?: React.ReactNode;
+  /** 0 means success; anything else makes `&&` skip and `||` run the next command. */
+  exitCode?: number;
+};
+
+/** What a command's `run` can return: text or React elements (exit status 0), or a `CommandResult`. */
+export type CommandOutput = React.ReactNode | CommandResult;
+
 export type ExtraCommandDefinition = {
   /**
    * Runs the command. Return text or React elements, or a Promise of them for async work:
    * the prompt waits until it resolves, and Ctrl+C cancels it (see `ctx.signal`).
    */
-  run: (args: string[], ctx: ExtraCommandContext) => React.ReactNode | Promise<React.ReactNode>;
+  run: (args: string[], ctx: ExtraCommandContext) => CommandOutput | Promise<CommandOutput>;
   completion?: ExtraCommandCompletionConfig;
   /** One-line description shown by `help`. */
   description?: string;
@@ -169,6 +179,8 @@ export type HistorySearchState = {
 export type HistoryEntry = {
   /** Identifies entries whose output arrives later (async commands). */
   id?: number;
+  /** Only show the output, e.g. what ran after `clear` in `clear; ls`. */
+  hideInput?: boolean;
   in: string;
   out?: React.ReactNode;
   prompt?: string;

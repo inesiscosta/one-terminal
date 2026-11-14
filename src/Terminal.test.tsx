@@ -201,6 +201,60 @@ describe('<Terminal />', () => {
     });
   });
 
+  describe('command lists and exit status', () => {
+    it('runs && and || based on the previous status, and ; always', async () => {
+      const { output, run } = setup();
+      await run('true && echo yes || echo no');
+      expect(output).toHaveTextContent(/yes$/);
+      await run('false && echo yes || echo no');
+      expect(output).toHaveTextContent(/no$/);
+      await run('false; echo always');
+      expect(output).toHaveTextContent(/always$/);
+    });
+
+    it('exposes the last status as $?', async () => {
+      const { output, run } = setup();
+      await run('nope; echo $?');
+      expect(output).toHaveTextContent(/command not found: nope\s*127$/);
+      await run('grep zzz about.txt; echo "status $?" \'$?\'');
+      expect(output).toHaveTextContent(/status 1 \$\?$/);
+    });
+
+    it('lets cd affect the rest of the line', async () => {
+      const { input, output, run } = setup();
+      await run('cd projects && ls');
+      expect(output).toHaveTextContent(/one\.md$/);
+      expect(input).toHaveAccessibleName('Terminal input, guest@projects:$');
+    });
+
+    it('shows only what ran after clear', async () => {
+      const { output, run } = setup();
+      await run('pwd');
+      await run('clear; echo fresh');
+      expect(output).toHaveTextContent(/^fresh$/);
+    });
+
+    it('takes exit codes from custom commands', async () => {
+      const { output, run } = setup({
+        extraCommands: {
+          check: { run: (args) => ({ output: `checked ${args[0]}`, exitCode: args[0] === 'ok' ? 0 : 3 }) },
+        },
+      });
+      await run('check bad || echo "failed with $?"');
+      expect(output).toHaveTextContent(/checked bad\s*failed with 3$/);
+      await run('check ok && echo passed');
+      expect(output).toHaveTextContent(/checked ok\s*passed$/);
+    });
+
+    it('waits for sleep before running the next command', async () => {
+      const { output, run } = setup();
+      await run('sleep 0.05 && echo woke');
+      const wokeCount = () => output.textContent?.match(/woke/g)?.length;
+      expect(wokeCount()).toBe(1); // just the command line
+      await waitFor(() => expect(wokeCount()).toBe(2));
+    });
+  });
+
   it('prefixes shell errors with the shell name', async () => {
     const { output, run } = setup();
     await run('upper');

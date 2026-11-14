@@ -32,7 +32,14 @@ const isHidden = (name: string) => name.startsWith('.');
 
 // ---------- Command metadata ----------
 
-type BuiltinHelp = { usage: string; description: string; details?: string; scope?: ExtraCommandFileScope };
+type BuiltinHelp = {
+  usage: string;
+  description: string;
+  details?: string;
+  scope?: ExtraCommandFileScope;
+  /** Left out of `help` and tab completion. */
+  hidden?: boolean;
+};
 
 // Order = order in `help`
 export const BUILTIN_HELP: Record<string, BuiltinHelp> = {
@@ -109,6 +116,8 @@ export const BUILTIN_HELP: Record<string, BuiltinHelp> = {
     details: "Accepts decimals and the suffixes s, m and h, e.g. 'sleep 1.5' or 'sleep 2m'.",
   },
   clear: { usage: 'clear', description: 'Clear the terminal screen' },
+  true: { usage: 'true', description: 'Do nothing, successfully (exit status 0)', hidden: true },
+  false: { usage: 'false', description: 'Do nothing, unsuccessfully (exit status 1)', hidden: true },
 };
 
 export const BUILTIN_COMMANDS = Object.keys(BUILTIN_HELP);
@@ -142,7 +151,14 @@ export type ExecResult = {
   node?: React.ReactNode;
   /** Error messages (shown even mid-pipeline). */
   err: string[];
+  /** Exit status. Defaults to 1 when there are errors, 0 otherwise. */
+  code?: number;
 };
+
+export type MaybePromise<T> = T | Promise<T>;
+
+/** The exit status of a result: its explicit code, or 1 if it reported errors. */
+export const exitCode = (result: ExecResult) => result.code ?? (result.err.length ? 1 : 0);
 
 export type ShellEnv = {
   fs: DirectoryNode;
@@ -162,7 +178,8 @@ export type ShellEnv = {
   changeDir: (absPath: string) => void;
   clearScreen: () => void;
   clearHistory: () => void;
-  startBusy: (ms: number) => void;
+  /** Aborted when the user presses Ctrl+C. */
+  signal: AbortSignal;
 };
 
 const ok = (out: string, node?: React.ReactNode): ExecResult => ({ out, node, err: [] });
@@ -293,6 +310,7 @@ function help(args: string[], env: ShellEnv): ExecResult {
       ...SHORTCUTS.map(([keys, what]) => row(keys, what)),
       '',
       "Pipe commands together with |, e.g. 'history | tail -5'.",
+      "Chain them with && (if it worked), || (if it failed) and ;. 'echo $?' shows the last exit status.",
       "Type 'help <command>' for more about a command.",
     ].join('\n'),
   );
@@ -472,6 +490,7 @@ function grep(args: string[], stdin: string | undefined, env: ShellEnv): ExecRes
     } else sources.push({ name, text: fileText(node) });
   }
 
+  let matched = false;
   const showNames = sources.length > 1 || flags.has('r');
   const texts: string[] = [];
   const nodes: React.ReactNode[] = [];
@@ -499,6 +518,7 @@ function grep(args: string[], stdin: string | undefined, env: ShellEnv): ExecRes
     const matches = lines
       .map((line, i) => ({ line, n: i + 1 }))
       .filter(({ line }) => test.test(line) !== flags.has('v'));
+    if (matches.length) matched = true;
     const nameNode =
       showNames && name ? (
         <>
@@ -543,7 +563,9 @@ function grep(args: string[], stdin: string | undefined, env: ShellEnv): ExecRes
     }
   }
 
-  return { out: texts.join('\n'), node: nodes.length ? joinLines(nodes) : undefined, err };
+  // Like grep: 0 if something matched, 1 if nothing did, 2 on errors
+  const code = err.length ? 2 : matched ? 0 : 1;
+  return { out: texts.join('\n'), node: nodes.length ? joinLines(nodes) : undefined, err, code };
 }
 
 function headTail(cmd: 'head' | 'tail', args: string[], stdin: string | undefined, env: ShellEnv): ExecResult {
@@ -726,7 +748,7 @@ function history(args: string[], env: ShellEnv): ExecResult {
   );
 }
 
-function sleep(args: string[], env: ShellEnv): ExecResult {
+function sleep(args: string[], env: ShellEnv): MaybePromise<ExecResult> {
   if (!args.length) return fail('sleep: missing operand');
   let total = 0;
   for (const arg of args) {
@@ -734,8 +756,20 @@ function sleep(args: string[], env: ShellEnv): ExecResult {
     if (ms === null) return fail(`sleep: invalid time interval '${arg}'`);
     total += ms;
   }
-  env.startBusy(total);
-  return ok('');
+  // Resolves when the time is up, or right away with status 130 (like bash) when interrupted
+  return new Promise((resolve) => {
+    const interrupted = () => resolve({ out: '', err: [], code: 130 });
+    if (env.signal.aborted) return interrupted();
+    const timer = setTimeout(() => resolve(ok('')), total);
+    env.signal.addEventListener(
+      'abort',
+      () => {
+        clearTimeout(timer);
+        interrupted();
+      },
+      { once: true },
+    );
+  });
 }
 
 export const DEFAULT_NEOFETCH_LOGO = [
@@ -813,7 +847,12 @@ function neofetch(env: ShellEnv): ExecResult {
 }
 
 /** Runs a built-in command, or returns null if `cmd` isn't one. */
-export function runBuiltin(cmd: string, args: string[], stdin: string | undefined, env: ShellEnv): ExecResult | null {
+export function runBuiltin(
+  cmd: string,
+  args: string[],
+  stdin: string | undefined,
+  env: ShellEnv,
+): MaybePromise<ExecResult> | null {
   switch (cmd) {
     case 'help':
       return help(args, env);
@@ -853,6 +892,10 @@ export function runBuiltin(cmd: string, args: string[], stdin: string | undefine
       return history(args, env);
     case 'sleep':
       return sleep(args, env);
+    case 'true':
+      return ok('');
+    case 'false':
+      return { out: '', err: [], code: 1 };
     case 'clear':
       env.clearScreen();
       return ok('');

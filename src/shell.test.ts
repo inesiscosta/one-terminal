@@ -1,8 +1,16 @@
 import { describe, expect, it } from 'vitest';
-import { expandHistory, getCompletionContext, lastArgument, parseCommandLine, parseOptions, quoteArg } from './shell';
+import {
+  EXIT_STATUS,
+  expandHistory,
+  getCompletionContext,
+  lastArgument,
+  parseCommandLine,
+  parseOptions,
+  quoteArg,
+} from './shell';
 
 describe('parseCommandLine', () => {
-  const words = (line: string) => parseCommandLine(line).stages;
+  const words = (line: string) => parseCommandLine(line).pipelines.flatMap((p) => p.stages);
 
   it('splits on whitespace', () => {
     expect(words('ls   -la  projects')).toEqual([['ls', '-la', 'projects']]);
@@ -35,6 +43,30 @@ describe('parseCommandLine', () => {
     expect(parseCommandLine('echo "oops').error).toMatch(/matching `"'/);
     expect(parseCommandLine('ls |').error).toMatch(/unexpected token/);
     expect(parseCommandLine('| ls').error).toMatch(/unexpected token/);
+  });
+
+  it('splits command lists on &&, || and ;', () => {
+    expect(parseCommandLine('cd x && ls | wc -l || echo no; pwd').pipelines).toEqual([
+      { stages: [['cd', 'x']], then: '&&' },
+      { stages: [['ls'], ['wc', '-l']], then: '||' },
+      { stages: [['echo', 'no']], then: ';' },
+      { stages: [['pwd']] },
+    ]);
+    expect(parseCommandLine('ls;').pipelines).toEqual([{ stages: [['ls']] }]);
+    expect(parseCommandLine("echo 'a && b' \\; c").pipelines).toEqual([{ stages: [['echo', 'a && b', ';', 'c']] }]);
+    expect(parseCommandLine('echo a&b').pipelines).toEqual([{ stages: [['echo', 'a&b']] }]);
+  });
+
+  it('reports list syntax errors', () => {
+    expect(parseCommandLine('&& ls').error).toBe("syntax error near unexpected token `&&'");
+    expect(parseCommandLine('ls && || pwd').error).toBe("syntax error near unexpected token `||'");
+    expect(parseCommandLine(';').error).toBe("syntax error near unexpected token `;'");
+    expect(parseCommandLine('ls &&').error).toBe('syntax error: unexpected end of file');
+  });
+
+  it('marks $? outside single quotes', () => {
+    expect(words('echo $? "$?" \'$?\'')).toEqual([['echo', EXIT_STATUS, EXIT_STATUS, '$?']]);
+    expect(lastArgument('echo $?')).toBe('$?');
   });
 });
 

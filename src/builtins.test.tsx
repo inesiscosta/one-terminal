@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { humanSize, runBuiltin, type ShellEnv } from './builtins';
+import { exitCode, humanSize, runBuiltin, type ExecResult, type ShellEnv } from './builtins';
 import { parseCommandLine } from './shell';
 import type { DirectoryNode } from './types';
 
@@ -61,7 +61,7 @@ function makeEnv(overrides: Partial<ShellEnv> = {}): ShellEnv {
     changeDir: vi.fn(),
     clearScreen: vi.fn(),
     clearHistory: vi.fn(),
-    startBusy: vi.fn(),
+    signal: new AbortController().signal,
     ...overrides,
   };
   return env;
@@ -69,7 +69,8 @@ function makeEnv(overrides: Partial<ShellEnv> = {}): ShellEnv {
 
 /** Runs a (possibly piped) command line and returns stdout + stderr text. */
 function sh(line: string, env = makeEnv()) {
-  const { stages, error } = parseCommandLine(line);
+  const { pipelines, error } = parseCommandLine(line);
+  const stages = pipelines[0]?.stages ?? [];
   if (error) return { out: '', err: [error] };
   let stdin: string | undefined;
   const err: string[] = [];
@@ -77,6 +78,7 @@ function sh(line: string, env = makeEnv()) {
   for (const [cmd, ...args] of stages) {
     const result = runBuiltin(cmd, args, stdin, env);
     if (!result) return { out: '', err: [`command not found: ${cmd}`] };
+    if (result instanceof Promise) throw new Error(`${cmd} is async; await runBuiltin directly`);
     err.push(...result.err);
     out = result.out;
     stdin = out;
@@ -208,13 +210,36 @@ describe('other commands', () => {
     expect(sh('history 2', env).out).toBe('  2  pwd\n  3  history 2');
   });
 
-  it('sleep validates and starts a busy period', () => {
-    const env = makeEnv();
-    sh('sleep 1.5', env);
-    expect(env.startBusy).toHaveBeenCalledWith(1500);
-    expect(sh('sleep 2m', env)).toEqual({ out: '', err: [] });
-    expect(env.startBusy).toHaveBeenLastCalledWith(120000);
+  it('sleep waits, and stops with status 130 when aborted', async () => {
+    vi.useFakeTimers();
+    try {
+      const done = runBuiltin('sleep', ['1.5'], undefined, makeEnv()) as Promise<unknown>;
+      let finished = false;
+      done.then(() => (finished = true));
+      await vi.advanceTimersByTimeAsync(1499);
+      expect(finished).toBe(false);
+      await vi.advanceTimersByTimeAsync(1);
+      expect(await done).toMatchObject({ err: [] });
+
+      const controller = new AbortController();
+      const long = runBuiltin('sleep', ['2m'], undefined, makeEnv({ signal: controller.signal }));
+      controller.abort();
+      expect(await long).toMatchObject({ code: 130 });
+    } finally {
+      vi.useRealTimers();
+    }
     expect(sh('sleep x').err).toEqual(["sleep: invalid time interval 'x'"]);
+  });
+
+  it('true, false and grep set exit codes', () => {
+    const status = (cmd: string, ...args: string[]) =>
+      exitCode(runBuiltin(cmd, args, undefined, makeEnv()) as ExecResult);
+    expect(status('true')).toBe(0);
+    expect(status('false')).toBe(1);
+    expect(status('grep', 'Go', 'skills.txt')).toBe(0);
+    expect(status('grep', 'nothing', 'skills.txt')).toBe(1);
+    expect(status('grep', 'x', 'nope.txt')).toBe(2);
+    expect(status('ls', 'nope')).toBe(1);
   });
 
   it('whoami, pwd and unknown commands', () => {

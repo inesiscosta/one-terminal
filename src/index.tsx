@@ -138,11 +138,13 @@ export const Terminal: React.FC<Partial<TerminalProps>> = ({
             {showBanner && welcomeMessage && <div style={styles.historyLine}>{welcomeMessage}</div>}
 
             {state.history.map((entry, index) => (
-              <div key={index}>
-                <div style={styles.historyLine}>
-                  <span style={promptStyle}>{entry.in ? entry.prompt || currentPrompt : currentPrompt}</span>
-                  {entry.in}
-                </div>
+              <div key={entry.id != null ? `id-${entry.id}` : `i-${index}`}>
+                {!entry.hideInput && (
+                  <div style={styles.historyLine}>
+                    <span style={promptStyle}>{entry.in ? entry.prompt || currentPrompt : currentPrompt}</span>
+                    {entry.in}
+                  </div>
+                )}
                 {entry.out && <div style={styles.historyLine}>{entry.out}</div>}
               </div>
             ))}

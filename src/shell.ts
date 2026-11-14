@@ -1,13 +1,26 @@
 // Pure shell-language helpers: tokenizing, option parsing, history expansion, completion context.
 
-export type ParsedLine = { stages: string[][]; error?: string };
+/** How a pipeline connects to the next one: `&&` (if it succeeded), `||` (if it failed) or `;` (always). */
+export type ListOperator = '&&' | '||' | ';';
+
+/** One or more commands joined by `|`. */
+export type Pipeline = { stages: string[][]; then?: ListOperator };
+
+export type ParsedLine = { pipelines: Pipeline[]; error?: string };
 
 /**
- * Splits a command line into pipeline stages of arguments, handling
- * 'single quotes', "double quotes", backslash escapes and `|`.
+ * Stands in for `$?` in parsed arguments. It's replaced with the exit status when each
+ * pipeline runs, since an earlier command in the same line can change it.
+ */
+export const EXIT_STATUS = '\u0000?';
+
+/**
+ * Splits a command line into pipelines (joined by `&&`, `||` and `;`) of stages (joined by `|`)
+ * of arguments, handling 'single quotes', "double quotes", backslash escapes and `$?`.
  */
 export function parseCommandLine(line: string): ParsedLine {
-  const stages: string[][] = [];
+  const pipelines: Pipeline[] = [];
+  let stages: string[][] = [];
   let stage: string[] = [];
   let token = '';
   let inToken = false;
@@ -18,9 +31,22 @@ export function parseCommandLine(line: string): ParsedLine {
     token = '';
     inToken = false;
   };
+  /** Ends the current stage; false if it was empty. */
+  const endStage = () => {
+    endToken();
+    if (!stage.length) return false;
+    stages.push(stage);
+    stage = [];
+    return true;
+  };
+  const unexpected = (tok: string): ParsedLine => ({
+    pipelines: [],
+    error: `syntax error near unexpected token \`${tok}'`,
+  });
 
   for (let i = 0; i < line.length; i++) {
     const ch = line[i];
+    const next = line[i + 1];
 
     if (quote === "'") {
       if (ch === "'") quote = null;
@@ -30,7 +56,10 @@ export function parseCommandLine(line: string): ParsedLine {
 
     if (quote === '"') {
       if (ch === '"') quote = null;
-      else if (ch === '\\' && i + 1 < line.length && '"\\$`'.includes(line[i + 1])) token += line[++i];
+      else if (ch === '$' && next === '?') {
+        token += EXIT_STATUS;
+        i++;
+      } else if (ch === '\\' && i + 1 < line.length && '"\\$`'.includes(next)) token += line[++i];
       else token += ch;
       continue;
     }
@@ -42,26 +71,40 @@ export function parseCommandLine(line: string): ParsedLine {
       inToken = true;
       // A trailing backslash has nothing to escape, so it stays literal (like `bash -c 'echo a\'`)
       token += i + 1 < line.length ? line[++i] : '\\';
+    } else if (ch === '$' && next === '?') {
+      token += EXIT_STATUS;
+      inToken = true;
+      i++;
     } else if (/\s/.test(ch)) {
       endToken();
+    } else if (ch === ';' || (ch === '&' && next === '&') || (ch === '|' && next === '|')) {
+      const op: ListOperator = ch === ';' ? ';' : ch === '&' ? '&&' : '||';
+      if (op !== ';') i++;
+      if (!endStage()) return unexpected(op);
+      pipelines.push({ stages, then: op });
+      stages = [];
     } else if (ch === '|') {
-      endToken();
-      if (!stage.length) return { stages: [], error: "syntax error near unexpected token `|'" };
-      stages.push(stage);
-      stage = [];
+      if (!endStage()) return unexpected('|');
     } else {
       token += ch;
       inToken = true;
     }
   }
 
-  if (quote) return { stages: [], error: `unexpected EOF while looking for matching \`${quote}'` };
+  if (quote) return { pipelines: [], error: `unexpected EOF while looking for matching \`${quote}'` };
 
-  endToken();
-  if (stage.length) stages.push(stage);
-  else if (stages.length) return { stages: [], error: "syntax error near unexpected token `|'" };
+  if (endStage()) pipelines.push({ stages });
+  else if (stages.length) return unexpected('|');
+  else if (pipelines.length && pipelines[pipelines.length - 1].then !== ';') {
+    // `ls &&` needs another command, like bash -c
+    return { pipelines: [], error: 'syntax error: unexpected end of file' };
+  }
 
-  return { stages };
+  // A trailing `;` is allowed and means nothing
+  const last = pipelines[pipelines.length - 1];
+  if (last?.then === ';') delete last.then;
+
+  return { pipelines };
 }
 
 /** Quotes an argument if it contains characters the parser would treat specially. */
@@ -125,7 +168,9 @@ export function parseOptions(
 }
 
 function wordsOf(line: string): string[] {
-  return parseCommandLine(line).stages.flat();
+  return parseCommandLine(line)
+    .pipelines.flatMap((p) => p.stages.flat())
+    .map((word) => word.split(EXIT_STATUS).join('$?'));
 }
 
 /** Last argument of a command line (what `!$` and Alt+. use). */
@@ -253,9 +298,11 @@ export function getCompletionContext(raw: string): CompletionContext {
       if (i + 1 < raw.length) token += raw[++i];
     } else if (/\s/.test(ch)) {
       endToken();
-    } else if (ch === '|') {
+    } else if (ch === '|' || ch === ';' || (ch === '&' && raw[i + 1] === '&')) {
+      // A new command starts after |, ||, && and ;
       endToken();
       stageWords = [];
+      if (ch === '&') i++;
     } else {
       startToken(i);
       token += ch;
