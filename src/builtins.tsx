@@ -80,6 +80,20 @@ export const BUILTIN_HELP: Record<string, BuiltinHelp> = {
     scope: 'files',
   },
   nl: { usage: 'nl [file...]', description: 'Number lines', scope: 'files' },
+  sort: {
+    usage: 'sort [-rnuf] [file...]',
+    description: 'Sort lines',
+    details:
+      '  -r   Reverse the order\n  -n   Compare numbers (10 after 9)\n  -u   Drop duplicate lines\n  -f   Ignore case',
+    scope: 'files',
+  },
+  uniq: {
+    usage: 'uniq [-cdui] [file]',
+    description: 'Collapse repeated lines',
+    details:
+      "  -c   Prefix lines with how often they repeat\n  -d   Only show repeated lines\n  -u   Only show lines that don't repeat\n  -i   Ignore case\n\nOnly neighbouring lines are compared, so sort first: sort | uniq -c",
+    scope: 'files',
+  },
   echo: { usage: 'echo [text...]', description: 'Print text to the terminal' },
   whoami: { usage: 'whoami', description: 'Print the current user' },
   neofetch: { usage: 'neofetch', description: 'Show system info' },
@@ -205,6 +219,11 @@ function readSources(
   const sources: Source[] = [];
   const err: string[] = [];
   for (const name of operands) {
+    // "-" means standard input, as in real tools
+    if (name === '-') {
+      sources.push({ name: '-', text: stdin ?? '' });
+      continue;
+    }
     const node = env.getNodeAt(env.resolvePath(name));
     if (!node) err.push(`${cmd}: ${name}: No such file or directory`);
     else if (isDirectory(node)) err.push(`${cmd}: ${name}: Is a directory`);
@@ -375,6 +394,11 @@ function cat(args: string[], stdin: string | undefined, env: ShellEnv): ExecResu
   }
 
   for (const name of opts.operands) {
+    if (name === '-') {
+      texts.push(stdin ?? '');
+      nodes.push(stdin ?? '');
+      continue;
+    }
     const node = env.getNodeAt(env.resolvePath(name));
     if (!node) err.push(`cat: ${name}: No such file or directory`);
     else if (isDirectory(node)) err.push(`cat: ${name}: Is a directory`);
@@ -587,6 +611,48 @@ function nl(args: string[], stdin: string | undefined, env: ShellEnv): ExecResul
   return { out: lines.join('\n'), err: read.err };
 }
 
+function sort(args: string[], stdin: string | undefined, env: ShellEnv): ExecResult {
+  const opts = parseOptions('sort', args, { flags: 'rnuf' });
+  if (opts.error) return fail(opts.error);
+  const read = readSources('sort', opts.operands, stdin, env);
+  if (!read) return fail('sort: missing file operand');
+
+  const { flags } = opts;
+  const key = (line: string) => (flags.has('f') ? line.toLowerCase() : line);
+  // Like `sort -n`: lines without a leading number sort as 0
+  const number = (line: string) => parseFloat(line.trim()) || 0;
+  const compare = (a: string, b: string) =>
+    flags.has('n') ? number(a) - number(b) || key(a).localeCompare(key(b)) : key(a).localeCompare(key(b));
+
+  let lines = read.sources.flatMap((s) => splitLines(s.text)).sort(compare);
+  if (flags.has('r')) lines.reverse();
+  if (flags.has('u')) lines = lines.filter((line, i) => i === 0 || compare(lines[i - 1], line) !== 0);
+  return { out: lines.join('\n'), err: read.err };
+}
+
+function uniq(args: string[], stdin: string | undefined, env: ShellEnv): ExecResult {
+  const opts = parseOptions('uniq', args, { flags: 'cdui' });
+  if (opts.error) return fail(opts.error);
+  if (opts.operands.length > 1) return fail('uniq: only one input file is supported');
+  const read = readSources('uniq', opts.operands, stdin, env);
+  if (!read) return fail('uniq: missing file operand');
+
+  const { flags } = opts;
+  const same = (a: string, b: string) => (flags.has('i') ? a.toLowerCase() === b.toLowerCase() : a === b);
+  const groups: { line: string; count: number }[] = [];
+  for (const line of read.sources.flatMap((s) => splitLines(s.text))) {
+    const last = groups[groups.length - 1];
+    if (last && same(last.line, line)) last.count++;
+    else groups.push({ line, count: 1 });
+  }
+
+  const out = groups
+    .filter(({ count }) => (!flags.has('d') || count > 1) && (!flags.has('u') || count === 1))
+    .map(({ line, count }) => (flags.has('c') ? `${String(count).padStart(7)} ${line}` : line))
+    .join('\n');
+  return { out, err: read.err };
+}
+
 function tree(args: string[], env: ShellEnv): ExecResult {
   const opts = parseOptions('tree', args, { flags: 'ad', valued: 'L' });
   if (opts.error) return fail(opts.error);
@@ -770,6 +836,10 @@ export function runBuiltin(cmd: string, args: string[], stdin: string | undefine
       return wc(args, stdin, env);
     case 'nl':
       return nl(args, stdin, env);
+    case 'sort':
+      return sort(args, stdin, env);
+    case 'uniq':
+      return uniq(args, stdin, env);
     case 'echo': {
       let i = 0;
       while (i < args.length && /^-[neE]+$/.test(args[i])) i++;

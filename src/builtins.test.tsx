@@ -51,7 +51,7 @@ function makeEnv(overrides: Partial<ShellEnv> = {}): ShellEnv {
             ? normalize(p)
             : normalize(`${env.path}/${p}`),
     getNodeAt: (abs) => {
-      let node: DirectoryNode | (typeof fs.entries)[string] = fs;
+      let node: DirectoryNode | (typeof fs.entries)[string] = env.fs;
       for (const seg of abs.split('/').filter(Boolean)) {
         if (node.kind !== 'directory' || !(seg in node.entries)) return undefined;
         node = node.entries[seg];
@@ -167,6 +167,25 @@ describe('cat, grep and pipes', () => {
     expect(sh('cat skills.txt | head -2').out).toBe('Rust\nTypeScript');
     expect(sh('cat skills.txt | tail -n 1').out).toBe('Go');
     expect(sh('cat skills.txt | nl | head -1').out).toBe('     1\tRust');
+  });
+
+  it('sort and uniq', () => {
+    expect(sh('sort skills.txt').out).toBe('Go\nRust\nrust-analyzer fan\nTypeScript');
+    expect(sh('sort -r skills.txt | head -1').out).toBe('TypeScript');
+    expect(sh('echo 10 | cat - | sort -n').out).toBe('10');
+    expect(sh('history | sort -n', makeEnv({ history: ['b', 'a', 'b'] })).out).toBe('  1  b\n  2  a\n  3  b');
+    const words = makeEnv({
+      fs: {
+        kind: 'directory',
+        entries: { 'w.txt': text('b\na\nb\nB\na\na') },
+      },
+    });
+    expect(sh('sort w.txt | uniq -c', words).out).toBe('      3 a\n      2 b\n      1 B');
+    expect(sh('sort -f w.txt | uniq -ci', words).out).toBe('      3 a\n      3 b');
+    expect(sh('sort w.txt | uniq -d', words).out).toBe('a\nb');
+    expect(sh('sort w.txt | uniq -u', words).out).toBe('B');
+    expect(sh('sort -u w.txt', words).out).toBe('a\nb\nB');
+    expect(sh('uniq a b').err).toEqual(['uniq: only one input file is supported']);
   });
 
   it('echo prints arguments with quotes removed', () => {
