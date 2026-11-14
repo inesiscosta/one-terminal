@@ -328,3 +328,15 @@ body {
 .delay-500 {
   animation-delay: 500ms;
 }
+
+/*
+ * Nextra normally sets --nextra-bg from its <Head> component, which this site doesn't use.
+ * Without it, borders drawn in the page color (like the ring around the numbered steps)
+ * fall back to the text color and show up as a black outline.
+ */
+:root {
+  --nextra-bg: 255 255 255;
+}
+.dark {
+  --nextra-bg: 12 14 18;
+}
