@@ -1,0 +1,69 @@
+name: Deploy website
+
+# Builds the docs site and deploys it to Cloudflare Pages: a preview for every pull request
+# (the URL is posted on the PR) and production for main.
+#
+# Needs, in the repo settings:
+#   secrets.CLOUDFLARE_API_TOKEN   API token with "Cloudflare Pages: Edit"
+#   secrets.CLOUDFLARE_ACCOUNT_ID  your Cloudflare account ID
+#   vars.CLOUDFLARE_PAGES_PROJECT  the Pages project name (defaults to "one-terminal")
+# In Cloudflare, set the Pages project's production branch to main and turn off its own Git
+# builds if they're on, so each change isn't deployed twice.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: deploy-website-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    # Pull requests from forks can't read secrets, so they only get CI, not a preview
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      deployments: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # Builds the library, the static site and the search index (CI fails if the index is missing)
+      - run: pnpm --dir website build
+
+      - name: Deploy to Cloudflare Pages
+        id: deploy
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+          command: >-
+            pages deploy website/out
+            --project-name=${{ vars.CLOUDFLARE_PAGES_PROJECT || 'one-terminal' }}
+            --branch=${{ github.head_ref || github.ref_name }}
+            --commit-hash=${{ github.event.pull_request.head.sha || github.sha }}
+
+      - name: Comment the preview URL
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        env:
+          URL: ${{ steps.deploy.outputs.deployment-url }}
+        with:
+          script: |
+            const marker = '<!-- website-preview -->';
+            const body = `${marker}\n🔍 Website preview: ${process.env.URL}\n\nCommit: ${context.payload.pull_request.head.sha.slice(0, 7)}`;
+            const { owner, repo } = context.repo;
+            const issue_number = context.issue.number;
+            const comments = await github.paginate(github.rest.issues.listComments, { owner, repo, issue_number });
+            const existing = comments.find((c) => c.body?.includes(marker));
+            if (existing) await github.rest.issues.updateComment({ owner, repo, comment_id: existing.id, body });
+            else await github.rest.issues.createComment({ owner, repo, issue_number, body });
