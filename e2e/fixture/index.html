@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>one-terminal e2e</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 24px;
+        font-family: system-ui, sans-serif;
+      }
+      #terminal {
+        height: 360px;
+        max-width: 760px;
+      }
+    </style>
+  </head>
+  <body>
+    <p id="outside">Some text outside the terminal.</p>
+    <div id="terminal"></div>
+    <script type="module" src="./dist/app.js"></script>
+  </body>
+</html>

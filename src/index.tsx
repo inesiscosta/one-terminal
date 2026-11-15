@@ -165,7 +165,7 @@ export const Terminal: React.FC<Partial<TerminalProps>> = ({
                 {shownLine || ' '}
               </span>
               <span ref={caret.measurerRef} style={styles.realCaret} aria-hidden />
-              <span style={cursorStyle} aria-hidden />
+              <span style={cursorStyle} aria-hidden data-cursor />
               <input
                 ref={caret.inputRef}
                 style={styles.hiddenInput}

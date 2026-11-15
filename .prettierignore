@@ -10,3 +10,6 @@ website/public/_pagefind
 website/next-env.d.ts
 # Prettier's MDX support predates MDX 3 and can break Nextra pages
 *.mdx
+test-results
+playwright-report
+e2e/fixture/dist

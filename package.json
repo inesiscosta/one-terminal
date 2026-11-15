@@ -48,7 +48,8 @@
     "dev:website": "turbo dev --filter=website",
     "build:website": "turbo build --filter=website",
     "prepare": "husky",
-    "prepublishOnly": "pnpm type-check && pnpm test && pnpm build"
+    "prepublishOnly": "pnpm type-check && pnpm test && pnpm build",
+    "test:e2e": "playwright test"
   },
   "lint-staged": {
     "src/**/*.{ts,tsx}": [
@@ -67,12 +68,14 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.65.0",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.3",
     "@testing-library/user-event": "^14.6.10",
     "@types/node": "24.10.1",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
+    "esbuild": "0.27.2",
     "eslint": "^10.14.0",
     "eslint-plugin-react-hooks": "^7.1.1",
     "globals": "^17.14.0",
