@@ -20,28 +20,49 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  deploy:
+  # Builds the site with no secrets in reach: install scripts from the website's dependencies run
+  # here, so a compromised package can't read the Cloudflare token.
+  build:
     # Pull requests from forks can't read secrets, so they only get CI, not a preview
     if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # Builds the library, the static site and the search index (fails if the index is missing)
+      - run: pnpm --dir website build
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: website
+          path: website/out
+          retention-days: 1
+
+  # Only uploads the built files; this is the one job that sees the token.
+  deploy:
+    needs: build
     runs-on: ubuntu-latest
     permissions:
       contents: read
       pull-requests: write
       deployments: write
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
-          node-version: 22
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      # Builds the library, the static site and the search index (CI fails if the index is missing)
-      - run: pnpm --dir website build
+          name: website
+          path: website/out
 
       - name: Deploy to Cloudflare Pages
         id: deploy
-        uses: cloudflare/wrangler-action@v3
+        uses: cloudflare/wrangler-action@9acf94ace14e7dc412b076f2c5c20b8ce93c79cd # v3.15.0
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
@@ -54,7 +75,7 @@ jobs:
 
       - name: Comment the preview URL
         if: github.event_name == 'pull_request'
-        uses: actions/github-script@v7
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
         env:
           URL: ${{ steps.deploy.outputs.deployment-url }}
         with:
