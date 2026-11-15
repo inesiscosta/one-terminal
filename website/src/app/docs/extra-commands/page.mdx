@@ -37,7 +37,7 @@ These are the examples from this page, running live:
 
 ```ts
 type ExtraCommandDefinition = {
-  run: (args: string[], ctx: ExtraCommandContext) => React.ReactNode | Promise<React.ReactNode>;
+  run: (args: string[], ctx: ExtraCommandContext) => CommandOutput | Promise<CommandOutput>;
   description?: string; // one line in `help`
   usage?: string;       // e.g. "projects [name]" (defaults to the name)
   details?: string;     // extra text for `help <command>`
@@ -77,6 +77,7 @@ run: (args) => {
 | `string` / `number` | Text (keeps `\n` line breaks) | That text |
 | A React element | Rendered as-is | Empty text |
 | `null`, `undefined`, `false` | Nothing | Empty text |
+| `{ output, exitCode }` | `output`, as above | `output`, as above, with a [status](#exit-status) |
 
 React elements let you show links, colors and images:
 
@@ -94,8 +95,29 @@ contact: {
 
 Return a string whenever you can, so the output can be piped into `grep`, `head`, `wc`…
 
-If `run` throws (or its Promise rejects), the terminal prints `error: executing <name>` and logs the error to
-the console.
+If `run` throws (or its Promise rejects), the terminal prints `error: executing <name>`, logs the error to the
+console and sets the exit status to `1`.
+
+## Exit status
+
+Commands succeed (status `0`) unless they say otherwise. To report a failure, return `{ output, exitCode }`:
+
+```tsx
+deploy: {
+  description: 'Deploy if the tests pass',
+  run: (args) =>
+    args[0] === '--force'
+      ? 'Deployed!'
+      : { output: 'deploy: tests are failing (use --force)', exitCode: 1 },
+},
+```
+
+```bash
+deploy || echo "not deployed, status $?"
+```
+
+A non-zero status makes `&&` skip the next command and `||` run it, and shows up in `$?`. See
+[Exit status](/docs/commands#exit-status) for what the built-ins use.
 
 ## Async commands
 

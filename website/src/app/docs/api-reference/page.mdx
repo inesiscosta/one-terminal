@@ -155,7 +155,7 @@ type ExtraCommands = Record<string, ExtraCommandDefinition>;
 
 ```ts
 type ExtraCommandDefinition = {
-  run: (args: string[], ctx: ExtraCommandContext) => React.ReactNode | Promise<React.ReactNode>;
+  run: (args: string[], ctx: ExtraCommandContext) => CommandOutput | Promise<CommandOutput>;
   description?: string;
   usage?: string;
   details?: string;
@@ -166,6 +166,18 @@ type ExtraCommandDefinition = {
 type ExtraCommandCompletionConfig = {
   mode?: 'paths' | 'none';
   fileScope?: 'any' | 'directories' | 'files' | 'textFiles' | 'linkFiles';
+};
+```
+
+### `CommandOutput` and `CommandResult`
+
+```ts
+// Text or React elements (exit status 0), or output with an explicit exit status
+type CommandOutput = React.ReactNode | CommandResult;
+
+type CommandResult = {
+  output?: React.ReactNode;
+  exitCode?: number; // 0 = success
 };
 ```
 

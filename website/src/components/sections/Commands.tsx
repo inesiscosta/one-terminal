@@ -12,6 +12,7 @@ import {
   Timer,
   Search,
   Monitor,
+  ArrowDownAZ,
 } from 'lucide-react';
 
 const commands = [
@@ -21,6 +22,7 @@ const commands = [
   { name: 'cat', description: 'Display file contents', icon: FileText, color: 'text-terminal-purple' },
   { name: 'pwd', description: 'Print working directory', icon: MapPin, color: 'text-terminal-cyan' },
   { name: 'grep', description: 'Search text, with pipes', icon: Search, color: 'text-terminal-red' },
+  { name: 'sort', description: 'Sort lines, then uniq -c to count', icon: ArrowDownAZ, color: 'text-terminal-yellow' },
   { name: 'neofetch', description: 'Show off your info', icon: Monitor, color: 'text-terminal-cyan' },
   { name: 'echo', description: 'Output text to terminal', icon: MessageSquare, color: 'text-terminal-green' },
   { name: 'tree', description: 'Show directory structure', icon: FolderTree, color: 'text-terminal-yellow' },

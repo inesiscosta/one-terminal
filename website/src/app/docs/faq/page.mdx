@@ -51,10 +51,10 @@ reload starts fresh with your original files (and an empty history).
 `~` is the root of `fileStructure`. `cd`, `cd ~` and `cd /` all go to the same place. The prompt and title show
 it as `~`.
 
-## Are wildcards (`*.md`), `&&`, `;` or `>` supported?
+## Are wildcards (`*.md`), variables or `>` supported?
 
-Not yet, but feel free to open a PR! Pipes (`|`), quotes, escapes and history expansion are supported. To search
-many files, use `grep -r`.
+Not yet, but feel free to open a PR! Pipes (`|`), chaining with `&&`, `||` and `;`, `$?`, quotes, escapes and
+history expansion are supported. To search many files, use `grep -r`.
 
 ## Can a custom command be async?
 

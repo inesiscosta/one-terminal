@@ -25,6 +25,8 @@ counterparts. Typing `help` lists them all, and `help <command>` explains one.
 | [`head` / `tail`](#head--tail) | First / last lines |
 | [`wc`](#wc) | Count lines, words and characters |
 | [`nl`](#nl) | Number lines |
+| [`sort`](#sort) | Sort lines |
+| [`uniq`](#uniq) | Collapse repeated lines |
 | [`echo`](#echo) | Print text |
 | [`whoami`](#whoami) | Print the username |
 | [`neofetch`](#neofetch) | Show a logo and info |
@@ -60,9 +62,46 @@ cat skills.txt | grep -i rust | wc -l
 grep -r TODO | head
 ```
 
-Commands that read files (`cat`, `grep`, `head`, `tail`, `wc`, `nl`) read the piped text when you don't give
-them a file. As in bash, each part of a pipeline runs on its own, so `cd projects | cat` doesn't change
-directory, and `clear` or `history -c` only take effect when run by themselves. Your [extra commands](/docs/extra-commands#reading-piped-input) can read it too.
+Commands that read files (`cat`, `grep`, `head`, `tail`, `wc`, `nl`, `sort`, `uniq`) read the piped text when
+you don't give them a file, or when the file is `-`. Your [extra commands](/docs/extra-commands#reading-piped-input)
+can read it too.
+
+As in bash, each part of a pipeline runs on its own, so `cd projects | cat` doesn't change directory, and
+`clear` or `history -c` only take effect when run by themselves.
+
+### Chaining commands
+
+Run several commands on one line:
+
+```bash
+cd projects && ls                # ls only runs if cd worked
+grep rust skills.txt || echo no  # echo only runs if grep found nothing
+clear; neofetch                  # ; always runs the next command
+```
+
+`&&` runs the next command if the previous one succeeded, `||` if it failed, and `;` either way. Unlike
+pipeline stages, chained commands share the session, so `cd projects && ls` lists `projects`.
+
+### Exit status
+
+Every command finishes with an exit status: `0` for success, anything else for failure. `$?` holds the last
+one:
+
+```bash
+grep rust skills.txt; echo $?   # 0 if something matched, 1 if not
+nope; echo $?                    # 127: command not found
+```
+
+| Status | Meaning |
+| :--- | :--- |
+| `0` | Success |
+| `1` | Failure, e.g. a missing file or `grep` finding nothing |
+| `2` | Usage or syntax error (and `grep` errors) |
+| `127` | Command not found |
+| `130` | Interrupted with `Ctrl+C` |
+
+A pipeline's status is its last command's. `true` and `false` do nothing except succeed or fail, which is
+handy for trying this out. Your own commands can [set a status too](/docs/extra-commands#exit-status).
 
 ### Flags
 
@@ -207,6 +246,34 @@ characters. A three-line file counts as `3` whether or not its `content` ends wi
 ### nl
 
 Numbers the non-empty lines of files or piped input.
+
+### sort
+
+```bash
+sort [-rnuf] [file...]
+```
+
+| Flag | Effect |
+| :--- | :--- |
+| `-r` | Reverse the order |
+| `-n` | Compare numbers, so `10` comes after `9` |
+| `-u` | Drop duplicate lines |
+| `-f` | Ignore case |
+
+### uniq
+
+```bash
+uniq [-cdui] [file]
+```
+
+Collapses repeated neighbouring lines, so sort first: `sort words.txt | uniq -c`.
+
+| Flag | Effect |
+| :--- | :--- |
+| `-c` | Prefix each line with how often it repeats |
+| `-d` | Only show repeated lines |
+| `-u` | Only show lines that don't repeat |
+| `-i` | Ignore case |
 
 ### echo
 

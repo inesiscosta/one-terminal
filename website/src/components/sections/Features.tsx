@@ -10,7 +10,7 @@ const features = [
     icon: <Command className="w-6 h-6" />,
     title: 'Built-in Commands',
     description:
-      'Ships with essential commands like ls, cd, cat, tree, grep, head, tail, neofetch, history and more, with pipes, quotes and tab completion out of the box.',
+      'Ships with essential commands like ls, cd, cat, tree, grep, head, tail, neofetch, history and more, with pipes, &&, quotes and tab completion out of the box.',
   },
   {
     icon: <Layout className="w-6 h-6" />,
