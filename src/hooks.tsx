@@ -114,6 +114,8 @@ export type TerminalEngineOptions = {
   fs: DirectoryNode;
   startPath?: string;
   extraCommands?: ExtraCommands;
+  /** Built-in commands to turn off. */
+  disabledCommands?: readonly string[];
   username?: string;
   hostname?: string;
   /** Prefix for shell errors, e.g. "zsh" gives "zsh: command not found: foo". */
@@ -127,6 +129,7 @@ export function useTerminalEngine({
   fs,
   startPath = '/',
   extraCommands,
+  disabledCommands,
   username = 'guest',
   hostname = 'one-terminal',
   shellName = 'zsh',
@@ -174,9 +177,18 @@ export function useTerminalEngine({
     return isDirectory(current) ? current : null;
   }, [fs, path]);
 
+  // Keyed by the names, so an inline array (disabledCommands={['history']}) doesn't change identity every render
+  const disabledKey = (disabledCommands ?? []).join('\n');
+  const disabled = useMemo<ReadonlySet<string>>(
+    () => new Set(disabledKey ? disabledKey.split('\n') : []),
+    [disabledKey],
+  );
+
   const commandInfos = useMemo<CommandInfo[]>(() => {
     const extras = extraCommands ?? {};
-    const builtins = BUILTIN_COMMANDS.filter((name) => !(name in extras) && !BUILTIN_HELP[name].hidden).map((name) => ({
+    const builtins = BUILTIN_COMMANDS.filter(
+      (name) => !(name in extras) && !disabled.has(name) && !BUILTIN_HELP[name].hidden,
+    ).map((name) => ({
       name,
       usage: BUILTIN_HELP[name].usage,
       description: BUILTIN_HELP[name].description,
@@ -191,7 +203,7 @@ export function useTerminalEngine({
         builtin: false,
       }));
     return [...builtins, ...custom];
-  }, [extraCommands]);
+  }, [extraCommands, disabled]);
 
   const allCommands = useMemo(() => commandInfos.map((c) => c.name), [commandInfos]);
 
@@ -252,6 +264,7 @@ export function useTerminalEngine({
         commands: commandInfos,
         history: previousCommandsRef.current,
         extraCommands,
+        disabled,
         signal,
         resolvePath: (p) => resolveFrom(cwd, p),
         getNodeAt,
@@ -309,7 +322,7 @@ export function useTerminalEngine({
         }
         try {
           return (
-            runBuiltin(cmd, args, stdin, env) ?? {
+            (disabled.has(cmd) ? null : runBuiltin(cmd, args, stdin, env)) ?? {
               out: '',
               err: [`${shellName}: command not found: ${cmd}`],
               code: 127,
@@ -382,6 +395,7 @@ export function useTerminalEngine({
       clearScreen,
       commandInfos,
       cwdPathPrev,
+      disabled,
       extraCommands,
       fs,
       getNodeAt,
@@ -615,7 +629,7 @@ export function useTerminalEngine({
       typed = ctx.word;
       options = allCommands.filter((c) => c.startsWith(typed));
     } else {
-      const scope = getPathCompletionScope(ctx.command, extraCommands);
+      const scope = getPathCompletionScope(ctx.command, extraCommands, disabled);
       if (scope === 'none') return;
 
       kind = 'path';
@@ -665,7 +679,7 @@ export function useTerminalEngine({
     const newInput = prefix.length > typed.length ? ctx.linePrefix + quoteArg(basePart + prefix) : raw;
     setInput(newInput);
     setCompletion({ kind, options, index: -1, seedInput: newInput, linePrefix: ctx.linePrefix, basePart });
-  }, [allCommands, completion, extraCommands, getNodeAt, input, resolvePath]);
+  }, [allCommands, completion, disabled, extraCommands, getNodeAt, input, resolvePath]);
 
   /** Ctrl+C: stops a running command, or abandons the current line. */
   const interrupt = useCallback(

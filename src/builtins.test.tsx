@@ -42,6 +42,7 @@ function makeEnv(overrides: Partial<ShellEnv> = {}): ShellEnv {
     startedAt: Date.now(),
     commands: [],
     history: [],
+    disabled: new Set(),
     resolvePath: (p) =>
       !p || p === '.'
         ? env.path

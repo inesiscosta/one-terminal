@@ -34,6 +34,20 @@ counterparts. Typing `help` lists them all, and `help <command>` explains one.
 | [`sleep`](#sleep) | Wait (stop with `Ctrl+C`) |
 | [`clear`](#clear) | Clear the screen |
 
+### Turning commands off
+
+Every built-in is on by default. List the ones you don't want in `disabledCommands`:
+
+```tsx
+<Terminal disabledCommands={['history', 'neofetch', 'sleep']} />
+```
+
+A disabled command answers `command not found`, and it's left out of `help` and tab completion. Keyboard
+shortcuts keep working, so `Ctrl+L` still clears the screen with `clear` turned off.
+
+To change what a built-in does rather than remove it, add an [extra command](/docs/extra-commands) with the
+same name: extra commands always take precedence.
+
 ## Shell syntax
 
 ### Quotes and escapes

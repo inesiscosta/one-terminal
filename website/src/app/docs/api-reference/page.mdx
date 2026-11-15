@@ -23,6 +23,7 @@ Every prop is optional.
 | `theme` | [`BuiltInTheme`](#builtintheme) \| [`TerminalTheme`](#terminaltheme) \| `[BuiltInTheme, TerminalTheme]` | `"dracula"` | Colors, font and cursor. [Guide](/docs/customization#themes) |
 | `windowChrome` | [`WindowChromeStyle`](#windowchromestyle) \| `Partial<TerminalWindowChrome>` \| `[WindowChromeStyle, Partial<TerminalWindowChrome>]` | `"mac"` | Window frame. [Guide](/docs/customization#window-chrome) |
 | `extraCommands` | [`ExtraCommands`](#extracommands) | — | Custom commands. [Guide](/docs/extra-commands) |
+| `disabledCommands` | [`BuiltinCommand`](#builtincommand)`[]` | — | Built-ins to turn off. [Guide](/docs/commands#turning-commands-off) |
 | `neofetch` | [`NeofetchConfig`](#neofetchconfig) | — | Logo and info for `neofetch`. [Guide](/docs/neofetch) |
 | `demo` | [`TerminalDemoConfig`](#terminaldemoconfig) | — | Scripted intro. [Guide](/docs/demo) |
 | `className` | `string` | — | Class for the outer wrapper |
@@ -194,6 +195,17 @@ type ExtraCommandContext = {
   stdin?: string;
   signal: AbortSignal; // aborted on Ctrl+C
 };
+```
+
+### `BuiltinCommand`
+
+The name of a built-in, as used by `disabledCommands`:
+
+```ts
+type BuiltinCommand =
+  | 'help' | 'ls' | 'cd' | 'pwd' | 'tree' | 'cat' | 'grep' | 'head' | 'tail' | 'wc' | 'nl'
+  | 'sort' | 'uniq' | 'echo' | 'whoami' | 'neofetch' | 'history' | 'sleep' | 'clear'
+  | 'true' | 'false';
 ```
 
 ### `CommandInfo`

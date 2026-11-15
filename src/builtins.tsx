@@ -1,5 +1,6 @@
 import React from 'react';
 import type {
+  BuiltinCommand,
   FSNode,
   DirectoryNode,
   FileNode,
@@ -42,7 +43,7 @@ type BuiltinHelp = {
 };
 
 // Order = order in `help`
-export const BUILTIN_HELP: Record<string, BuiltinHelp> = {
+export const BUILTIN_HELP: Record<BuiltinCommand, BuiltinHelp> = {
   help: { usage: 'help [command]', description: 'Show commands, or help for one' },
   ls: {
     usage: 'ls [-al] [path...]',
@@ -120,7 +121,12 @@ export const BUILTIN_HELP: Record<string, BuiltinHelp> = {
   false: { usage: 'false', description: 'Do nothing, unsuccessfully (exit status 1)', hidden: true },
 };
 
-export const BUILTIN_COMMANDS = Object.keys(BUILTIN_HELP);
+export const BUILTIN_COMMANDS = Object.keys(BUILTIN_HELP) as BuiltinCommand[];
+
+/** Help for a built-in by name, or undefined if there's no such built-in. */
+export function builtinHelp(name: string): BuiltinHelp | undefined {
+  return Object.hasOwn(BUILTIN_HELP, name) ? BUILTIN_HELP[name as BuiltinCommand] : undefined;
+}
 
 export const SHORTCUTS: [string, string][] = [
   ['Tab', 'Complete commands and paths'],
@@ -133,13 +139,18 @@ export const SHORTCUTS: [string, string][] = [
   ['!! / !n', 'Re-run last command / command n'],
 ];
 
-export function getPathCompletionScope(cmd: string, extraCommands?: ExtraCommands): ExtraCommandFileScope {
+export function getPathCompletionScope(
+  cmd: string,
+  extraCommands?: ExtraCommands,
+  disabled?: ReadonlySet<string>,
+): ExtraCommandFileScope {
   const def = extraCommands?.[cmd];
   if (def) {
     if ((def.completion?.mode ?? 'none') === 'none') return 'none';
     return def.completion?.fileScope ?? 'any';
   }
-  return BUILTIN_HELP[cmd]?.scope ?? 'none';
+  if (disabled?.has(cmd)) return 'none';
+  return builtinHelp(cmd)?.scope ?? 'none';
 }
 
 // ---------- Execution ----------
@@ -173,6 +184,8 @@ export type ShellEnv = {
   commands: CommandInfo[];
   history: string[];
   extraCommands?: ExtraCommands;
+  /** Built-ins turned off with `disabledCommands`. */
+  disabled: ReadonlySet<string>;
   resolvePath: (p: string) => string;
   getNodeAt: (absPath: string) => FSNode | undefined;
   changeDir: (absPath: string) => void;
@@ -277,7 +290,7 @@ function help(args: string[], env: ShellEnv): ExecResult {
   const topic = args[0];
   if (topic) {
     const extra = env.extraCommands?.[topic];
-    const builtin = BUILTIN_HELP[topic];
+    const builtin = env.disabled.has(topic) ? undefined : builtinHelp(topic);
     const entry =
       extra && !extra.hidden
         ? { usage: extra.usage ?? topic, description: extra.description, details: extra.details }

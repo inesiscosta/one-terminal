@@ -12,11 +12,11 @@ easter eggs.
 - **Feels like a real shell.** Quotes, pipes, flags, `~` and relative paths, tab completion, `Ctrl+R` history
   search, `!!` and friends, and the readline shortcuts (`Ctrl+A/E/U/K/W/Y`…).
 - **Useful built-ins.** `ls`, `cd`, `pwd`, `tree`, `cat`, `grep`, `head`, `tail`, `wc`, `nl`, `sort`, `uniq`, `echo`,
-  `whoami`, `neofetch`, `history`, `sleep`, `clear` and a proper `help`.
+  `whoami`, `neofetch`, `history`, `sleep`, `clear` and a proper `help`. Turn off any you don't want.
 - **Themeable.** Five built-in themes, macOS / Windows / Linux window frames, custom cursors, and a title bar that
   follows the current directory.
 - **Extensible.** Add commands that return text or React elements, read piped input, and complete file paths, or
-  override any built-in.
+  replace any built-in.
 - **Demo mode.** Script an intro that types itself.
 
 ## Install

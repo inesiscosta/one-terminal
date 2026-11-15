@@ -198,6 +198,30 @@ export type NeofetchConfig = {
   colors?: boolean;
 };
 
+/** The built-in commands, e.g. for `disabledCommands`. */
+export type BuiltinCommand =
+  | 'help'
+  | 'ls'
+  | 'cd'
+  | 'pwd'
+  | 'tree'
+  | 'cat'
+  | 'grep'
+  | 'head'
+  | 'tail'
+  | 'wc'
+  | 'nl'
+  | 'sort'
+  | 'uniq'
+  | 'echo'
+  | 'whoami'
+  | 'neofetch'
+  | 'history'
+  | 'sleep'
+  | 'clear'
+  | 'true'
+  | 'false';
+
 export type TerminalProps = {
   fileStructure: DirectoryNode;
   startPath: string;
@@ -218,6 +242,12 @@ export type TerminalProps = {
   windowChrome: WindowChromeStyle | Partial<TerminalWindowChrome> | [WindowChromeStyle, Partial<TerminalWindowChrome>];
   theme: BuiltInTheme | Partial<TerminalTheme> | [BuiltInTheme, Partial<TerminalTheme>];
   extraCommands?: ExtraCommands;
+  /**
+   * Built-in commands to turn off, e.g. `['history', 'neofetch']`. They answer "command not
+   * found" and disappear from `help` and tab completion. An extra command with the same name
+   * still runs, so you can also replace a built-in instead of turning it off.
+   */
+  disabledCommands?: BuiltinCommand[];
   className?: string;
   demo?: TerminalDemoConfig;
   style?: React.CSSProperties;

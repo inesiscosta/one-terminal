@@ -255,6 +255,33 @@ describe('<Terminal />', () => {
     });
   });
 
+  it('turns off the built-ins listed in disabledCommands', async () => {
+    const { user, input, output, run } = setup({ disabledCommands: ['history', 'cat'] });
+    await run('history');
+    expect(output).toHaveTextContent('zsh: command not found: history');
+    await run('cat about.txt | wc -l');
+    expect(output).toHaveTextContent('zsh: command not found: cat');
+    await run('help');
+    expect(output).not.toHaveTextContent('Show previously run commands');
+    expect(output).not.toHaveTextContent('Print the contents of files');
+    expect(output).toHaveTextContent('List directory contents');
+    await run('help cat');
+    expect(output).toHaveTextContent("help: no help topics match 'cat'");
+    // Neither the command nor, after it, file paths complete
+    await user.type(input, 'ca');
+    await user.keyboard('{Tab}');
+    expect(input).toHaveValue('ca');
+  });
+
+  it('runs an extra command in place of a disabled built-in', async () => {
+    const { output, run } = setup({
+      disabledCommands: ['whoami'],
+      extraCommands: { whoami: { description: 'Who am I', run: () => 'a curious visitor' } },
+    });
+    await run('whoami');
+    expect(output).toHaveTextContent('a curious visitor');
+  });
+
   it('prefixes shell errors with the shell name', async () => {
     const { output, run } = setup();
     await run('upper');
