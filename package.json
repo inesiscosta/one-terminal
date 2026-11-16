@@ -1,14 +1,20 @@
 {
   "name": "one-terminal",
   "version": "2.0.0",
-  "description": "One \"fake\" terminal to rule them all! A React terminal component.",
+  "description": "A fake but convincing terminal for React, with a virtual file system, pipes, tab completion and custom commands.",
   "keywords": [
     "react",
+    "react-component",
     "terminal",
+    "terminal-emulator",
+    "fake-terminal",
+    "shell",
+    "console",
+    "cli",
+    "command-line",
+    "virtual-file-system",
     "portfolio",
-    "component",
-    "headless",
-    "fake"
+    "nextjs"
   ],
   "author": "Inês Costa",
   "license": "MIT",
